@@ -7,52 +7,74 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useRepositories } from '../repositories/RepositoryProvider';
-import { DashboardSummary, DashboardAlert, DashboardActivity, DashboardInsight } from '../domain/types';
+import { DashboardSummary, DashboardAlert, DashboardActivity, DashboardInsight, Order, Lead } from '../domain/types';
 import { AlertsAndInsights } from '../components/dashboard/AlertsAndInsights';
-
-const revenueData = [
-  { name: '1', recebido: 1200, previsto: 1500 },
-  { name: '5', recebido: 2100, previsto: 2400 },
-  { name: '10', recebido: 3400, previsto: 3400 },
-  { name: '15', recebido: 4800, previsto: 5200 },
-  { name: '20', recebido: 5900, previsto: 7000 },
-  { name: '25', recebido: 8000, previsto: 9100 },
-  { name: '30', recebido: 12500, previsto: 14000 },
-];
+import { BRAND } from '../lib/brand';
+import { formatBRL, formatNumber } from '../lib/format';
+import { EmptyState } from '../components/ui/EmptyState';
 
 export function Dashboard() {
-  const { dashboardRepo, settingsRepo } = useRepositories();
+  const { dashboardRepo, settingsRepo, orderRepo, crmRepo } = useRepositories();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [alerts, setAlerts] = useState<DashboardAlert[]>([]);
   const [insights, setInsights] = useState<DashboardInsight[]>([]);
   const [isOnboarding, setIsOnboarding] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
-  }, [dashboardRepo, settingsRepo]);
+  }, [dashboardRepo, settingsRepo, orderRepo, crmRepo]);
 
   const loadData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [sum, alts, ins, modules] = await Promise.all([
+      const [sum, alts, ins, profile, orders, leads] = await Promise.all([
         dashboardRepo.getSummary(),
         dashboardRepo.getAlerts(),
         dashboardRepo.getInsights ? dashboardRepo.getInsights() : Promise.resolve([]),
-        settingsRepo.getModuleFlags()
+        settingsRepo.getProfile(),
+        orderRepo.getOrders(),
+        crmRepo.getLeads()
       ]);
       setSummary(sum);
       setAlerts(alts);
       setInsights(ins);
+      setRecentOrders(orders);
+      setRecentLeads(leads);
       
-      const profile = await settingsRepo.getProfile();
-      if (!profile.name || profile.name === 'Minha Empresa' || profile.name === 'COFCOF.CO') {
+      if (!profile.name || profile.name === 'Minha Empresa' || profile.name === BRAND.tenantName) {
          setIsOnboarding(true);
       } else {
          setIsOnboarding(false);
       }
+
+      // Generate some chart data from orders
+      const last7Days = Array.from({length: 7}).map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return {
+          name: d.getDate().toString(),
+          recebido: 0,
+          previsto: 0,
+          date: d.toDateString()
+        };
+      });
+
+      orders.forEach(o => {
+        const orderDate = new Date(o.createdAt).toDateString();
+        const day = last7Days.find(d => d.date === orderDate);
+        if (day) {
+          day.recebido += o.total;
+          day.previsto += o.total * 1.1; // simulated projection
+        }
+      });
+      setRevenueData(last7Days);
+
       
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar dashboard');
@@ -116,10 +138,10 @@ export function Dashboard() {
          <Card className="p-8 text-center shadow-xl border-amber-500/20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-[100px] rounded-full pointer-events-none" />
             
-            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(245,158,11,0.1)] relative z-10">
+            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(197,152,104,0.1)] relative z-10">
                <Rocket size={32} />
             </div>
-            <h2 className="text-3xl font-heading font-semibold text-zinc-50 mb-3 relative z-10">Bem-vindo ao GestaoOS!</h2>
+            <h2 className="text-3xl font-heading font-semibold text-zinc-50 mb-3 relative z-10">Bem-vindo ao {BRAND.name}!</h2>
             <p className="text-zinc-400 text-sm max-w-md mx-auto mb-8 relative z-10">O seu Command Center está quase pronto. Finalize as configurações básicas para decolar.</p>
 
             <div className="flex flex-col gap-3 text-left relative z-10">
@@ -195,15 +217,15 @@ export function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <MetricCard 
           title="Faturamento (Mês)"
-          value={`R$ ${(summary.faturamentoMes).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          value={formatBRL(summary.faturamentoMes)}
           trend={`${summary.faturamentoMes >= summary.metaFaturamento ? '+' : ''}${((summary.faturamentoMes / summary.metaFaturamento) * 100).toFixed(1)}%`}
           trendUp={summary.faturamentoMes >= summary.metaFaturamento}
-          subtitle={`Meta: R$ ${summary.metaFaturamento.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}`}
+          subtitle={`Meta: ${formatBRL(summary.metaFaturamento)}`}
         />
 
         <MetricCard 
           title="Margem Bruta Est."
-          value={`R$ ${summary.lucroEstimado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          value={formatBRL(summary.lucroEstimado)}
           trend={`${summary.margemBruta.toFixed(1)}%`}
           trendUp={summary.margemBruta > 30}
           subtitle="Projeção Atual"
@@ -211,7 +233,7 @@ export function Dashboard() {
 
         <MetricCard 
           title="Contas a Receber"
-          value={<span className="text-amber-500">R$ {summary.contasReceber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>}
+          value={<span className="text-amber-500">{formatBRL(summary.contasReceber)}</span>}
           trend=""
           trendUp={false}
           subtitle="Ativos Vencendo"
@@ -286,20 +308,20 @@ export function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
                <CardHeader className="pb-3">
-                 <CardTitle className="flex items-center gap-2 text-base text-zinc-100"><MessageSquare size={16} className="text-amber-500" /> Conversas Pendentes</CardTitle>
+                 <CardTitle className="flex items-center gap-2 text-base text-zinc-100"><MessageSquare size={16} className="text-amber-500" /> Conversas & Vendas</CardTitle>
                </CardHeader>
                <CardContent>
                  <div className="space-y-4">
                     <div className="flex items-center justify-between text-sm">
-                       <span className="text-zinc-400">Mensagens não lidas</span>
-                       <span className="font-mono text-zinc-100">12</span>
+                       <span className="text-zinc-400">Total de Leads Ativos</span>
+                       <span className="font-mono text-zinc-100">{recentLeads.length}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                       <span className="text-zinc-400">Orçamentos parados</span>
-                       <span className="font-mono font-medium text-amber-500">3</span>
+                       <span className="text-zinc-400">Pedidos Fechados</span>
+                       <span className="font-mono font-medium text-amber-500">{recentOrders.filter(o => o.status === 'Pago' || o.status === 'Preparando').length}</span>
                     </div>
                     <div className="pt-4 mt-2 border-t border-zinc-800">
-                       <Button variant="ghost" size="sm" className="w-full text-xs text-amber-500" onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'crm' }))}>Abrir Inbox Completa &rarr;</Button>
+                       <Button variant="ghost" size="sm" className="w-full text-xs text-amber-500" onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'crm' }))}>Ir para o CRM Completo &rarr;</Button>
                     </div>
                  </div>
                </CardContent>
@@ -307,20 +329,25 @@ export function Dashboard() {
 
             <Card>
                <CardHeader className="pb-3">
-                 <CardTitle className="flex items-center gap-2 text-base text-zinc-100"><ListTodo size={16} className="text-amber-500" /> Tarefas de Produção</CardTitle>
+                 <CardTitle className="flex items-center gap-2 text-base text-zinc-100"><ListTodo size={16} className="text-amber-500" /> Ordens Mais Recentes</CardTitle>
                </CardHeader>
                <CardContent>
                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-sm">
-                       <span className="text-zinc-400 truncate pr-2">Bolo Casamento Ex.</span>
-                       <span className="text-[10px] uppercase tracking-wider bg-red-500/10 text-red-500 px-2 flex-shrink-0 py-0.5 rounded border border-red-500/20 font-bold">Atrasado</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                       <span className="text-zinc-400 truncate pr-2">Torra Semanal 5kg</span>
-                       <span className="text-[10px] uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex-shrink-0 px-2 py-0.5 rounded font-bold">No Prazo</span>
-                    </div>
+                    {recentOrders.slice(0, 2).map((order) => (
+                      <div key={order.id} className="flex items-center justify-between text-sm">
+                         <span className="text-zinc-400 truncate pr-2 capitalize">{order.customer.split(' ')[0]} - {formatBRL(order.total)}</span>
+                         <span className={`text-[10px] uppercase tracking-wider px-2 flex-shrink-0 py-0.5 rounded border font-bold ${
+                            order.status === 'Novo' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                            order.status === 'Atrasado' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                            'bg-zinc-800 text-zinc-400 border-zinc-700'
+                         }`}>{order.status}</span>
+                      </div>
+                    ))}
+                    {recentOrders.length === 0 && (
+                      <p className="text-sm text-zinc-500 text-center py-2">Sem pedidos recentes.</p>
+                    )}
                     <div className="pt-4 mt-2 border-t border-zinc-800">
-                       <Button variant="ghost" size="sm" className="w-full text-xs text-amber-500" onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'producao' }))}>Acessar Painel &rarr;</Button>
+                       <Button variant="ghost" size="sm" className="w-full text-xs text-amber-500" onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'comercial' }))}>Ver todos os pedidos &rarr;</Button>
                     </div>
                  </div>
                </CardContent>

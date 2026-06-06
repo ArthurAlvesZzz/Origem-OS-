@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useRepositories } from '../../repositories/RepositoryProvider';
+import { useToast } from '../../components/ui/Toast';
 
 export function LoyaltyTab() {
+  const { success, error: toastError, info } = useToast();
   const { crmRepo } = useRepositories();
   const [program, setProgram] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export function LoyaltyTab() {
                 const p = Number((document.getElementById('loyPoints') as HTMLInputElement).value);
                 if(c && p) {
                    await crmRepo.adjustLoyaltyPoints(c, p, 'Bônus manual');
-                   alert('Pontos creditados com sucesso (simulação na UI)!');
+                   success('Pontos creditados com sucesso (simulação na UI)!');
                 }
             }}>Investir</button>
          </div>

@@ -3,6 +3,8 @@ import { MessageSquare, Send } from 'lucide-react';
 import { CrmCampaignRecord } from '../../repositories/interfaces/ICrmRepository';
 import { ICrmRepository } from '../../repositories/interfaces/ICrmRepository';
 import { Button } from '../ui/Button';
+import { useConfirm } from '../ui/ConfirmDialog';
+import { useToast } from '../ui/Toast';
 
 interface CrmCampaignsTabProps {
     crmRepo: ICrmRepository;
@@ -11,6 +13,8 @@ interface CrmCampaignsTabProps {
 export function CrmCampaignsTab({ crmRepo }: CrmCampaignsTabProps) {
     const [campaigns, setCampaigns] = useState<CrmCampaignRecord[]>([]);
     const [newCampaignName, setNewCampaignName] = useState('');
+    const confirm = useConfirm();
+    const { success, error } = useToast();
 
     const loadData = async () => {
         const c = await crmRepo.getCampaigns();
@@ -23,13 +27,18 @@ export function CrmCampaignsTab({ crmRepo }: CrmCampaignsTabProps) {
     
     const handleLaunchCampaign = async (id: string, currentStatus: string) => {
         if (currentStatus !== 'draft') return;
-        if (!confirm("Iniciar disparo da campanha para clientes com opt-in?")) return;
+        const proceed = await confirm({
+            title: 'Iniciar Campanha',
+            description: 'Deseja iniciar o disparo desta campanha para todos os clientes com opt-in?',
+            confirmText: 'Sim, Iniciar'
+        });
+        if (!proceed) return;
         try {
             await crmRepo.launchCampaign(id);
-            alert("Campanha iniciada. As mensagens foram enviadas para a fila.");
+            success("Campanha iniciada. As mensagens foram enviadas para a fila.");
             loadData();
         } catch(e) {
-            alert("Erro ao iniciar campanha");
+            error("Erro ao iniciar campanha");
         }
     };
     
@@ -38,9 +47,10 @@ export function CrmCampaignsTab({ crmRepo }: CrmCampaignsTabProps) {
         try {
             await crmRepo.createCampaign({ name: newCampaignName, channel: 'whatsapp' });
             setNewCampaignName('');
+            success('Campanha criada com sucesso');
             loadData();
         } catch(e) {
-            alert("Erro ao criar campanha");
+            error("Erro ao criar campanha");
         }
     };
 

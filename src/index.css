@@ -39,6 +39,15 @@
   --color-emerald-400: #67AC7C;
   --color-red-500: #AF4D4D;
   --color-red-400: #C96666;
+
+  @keyframes shine {
+    0% { transform: translateX(-150%) skewX(30deg); }
+    100% { transform: translateX(200%) skewX(30deg); }
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
 }
 
 @layer base {

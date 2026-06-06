@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { useState, useEffect, useRef } from 'react';
 import { Search, ShoppingCart, MessageSquare, Wallet, Users, Settings, Package, Truck, Activity, Bell } from 'lucide-react';
 import { Page } from '../../App';
@@ -14,6 +15,8 @@ interface CommandPaletteProps {
   onNavigate: (page: Page) => void;
   navGroups: NavGroup[];
 }
+
+import { BRAND } from '../../lib/brand';
 
 export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
@@ -52,7 +55,7 @@ export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: Comma
         navGroups.forEach(group => {
           group.items.forEach(item => {
             if (item.label.toLowerCase().includes(q)) {
-              newResults.push({ type: 'nav', id: item.id, label: `Go to ${item.label}`, icon: item.icon });
+              newResults.push({ type: 'nav', id: item.id, label: `Ir para ${item.label}`, icon: item.icon });
             }
           });
         });
@@ -75,7 +78,7 @@ export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: Comma
         const orders = await orderRepo.getOrders();
         const matchedOrders = orders.filter(o => o.id.toLowerCase().includes(q)).slice(0, 3);
         matchedOrders.forEach(o => {
-           newResults.push({ type: 'order', id: o.id, label: `Pedido #${o.id.substring(0, 6)}`, subLabel: `R$ ${o.total.toFixed(2)}`, icon: ShoppingCart });
+           newResults.push({ type: 'order', id: o.id, label: `Pedido #${o.id.substring(0, 6)}`, subLabel: `${formatBRL(o.total)}`, icon: ShoppingCart });
         });
 
         setResults(newResults);
@@ -107,9 +110,17 @@ export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: Comma
   };
 
   const handleAction = (action: string) => {
-      if (action === 'pdv') onNavigate('comercial');
-      if (action === 'crm') onNavigate('crm');
-      if (action === 'finance') onNavigate('financeiro');
+      if (action === 'pdv') {
+         onNavigate('comercial');
+         setTimeout(() => { window.location.hash = '#nova-venda'; }, 100);
+      }
+      if (action === 'crm') {
+         onNavigate('crm');
+      }
+      if (action === 'finance') {
+         onNavigate('financeiro');
+         setTimeout(() => { window.location.hash = '#nova-despesa'; }, 100);
+      }
       if (action === 'health') onNavigate('conexao');
       if (action === 'alerts') onNavigate('dashboard');
       onClose();
@@ -207,7 +218,7 @@ export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: Comma
            )}
         </div>
         <div className="border-t border-zinc-800/80 bg-zinc-950/50 px-4 py-3 flex justify-between items-center">
-            <span className="text-xs text-zinc-500">Powered by GestaoOS</span>
+            <span className="text-xs text-zinc-500">Gestão OS Premium</span>
             <div className="flex gap-2">
                <span className="text-[10px] font-mono tracking-widest bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded">↑↓</span>
                <span className="text-[10px] font-mono tracking-widest bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded">ENTER</span>

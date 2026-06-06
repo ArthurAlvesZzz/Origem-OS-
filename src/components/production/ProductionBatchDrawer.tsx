@@ -1,8 +1,14 @@
+import { formatBRL } from '../../lib/format';
 import { useState, useEffect } from 'react';
-import { X, Check, Plus, Trash2 } from 'lucide-react';
+import { Check, Plus, Trash2, Factory, Flame } from 'lucide-react';
 import { calculateProductionCosts } from '../../domain/production';
 import { ProductionStatus, ProductionExtraCost, Product } from '../../domain/types';
 import { useRepositories } from '../../repositories/RepositoryProvider';
+import { Button } from '../ui/Button';
+import { Drawer } from '../ui/Drawer';
+import { motion } from 'motion/react';
+import { useConfirm } from '../ui/ConfirmDialog';
+import { useToast } from '../ui/Toast';
 
 interface ProductionBatchDrawerProps {
   onClose: () => void;
@@ -19,6 +25,8 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
   const [laborCostPerHour, setLaborCostPerHour] = useState('25');
   const [responsible, setResponsible] = useState('Mestre de Torra');
   const [notes, setNotes] = useState('');
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [inputs, setInputs] = useState<{ productId: string; name: string; qty: number; unitCost: number }[]>([]);
   const [inputId, setInputId] = useState('');
@@ -30,6 +38,9 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
 
   const { productRepo, productionRepo, inventoryRepo, settingsRepo } = useRepositories();
   const [productsData, setProductsData] = useState<(Product & { currentStock: number })[]>([]);
+
+  const confirm = useConfirm();
+  const { error, success } = useToast();
 
   useEffect(() => {
     settingsRepo.getProductionRules().then(rules => {
@@ -47,7 +58,7 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
       setProductsData(withStock);
     };
     fetchProducts();
-  }, [productRepo, inventoryRepo]);
+  }, [productRepo, inventoryRepo, settingsRepo]);
 
   const availableProducts = productsData.filter(p => p.category !== 'Insumo');
   const insumos = productsData.filter(p => p.category === 'Insumo');
@@ -79,8 +90,8 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
   };
 
   const handleFinalize = async () => {
-    if (!finalProductId) return alert('Selecione o produto final.');
-    if (inputs.length === 0) return alert('Adicione pelo menos um insumo.');
+    if (!finalProductId) { error('Selecione o produto final.'); return; }
+    if (inputs.length === 0) { error('Adicione pelo menos um insumo.'); return; }
 
     const qtyFinalNum = parseFloat(finalQty) || 0;
     const initialNum = parseFloat(initialWeight) || 0;
@@ -89,7 +100,12 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
     const laborHNum = parseFloat(laborCostPerHour) || 0;
 
     if (status === 'Concluído' && finalWNum > initialNum) {
-       const proceed = window.confirm('Peso final está MAIOR que peso inicial. Deseja continuar?');
+       const proceed = await confirm({
+         title: 'Atenção ao Peso',
+         message: 'Peso final está MAIOR que peso inicial. Deseja continuar?',
+         confirmText: 'Continuar',
+         cancelText: 'Cancelar'
+       });
        if (!proceed) return;
     }
 
@@ -102,9 +118,16 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
     }
 
     if (warnings.length > 0) {
-      const proceed = window.confirm(warnings.join('\n') + '\n\nDeseja realizar a produção mesmo assim? O estoque ficará negativo.');
+      const proceed = await confirm({
+        title: 'Estoque insuficiente',
+        message: warnings.join('\n') + '\n\nDeseja realizar a produção mesmo assim? O estoque ficará negativo.',
+        confirmText: 'Sim, Finalizar',
+        cancelText: 'Cancelar'
+      });
       if (!proceed) return;
     }
+
+    setIsFinalizing(true);
 
     try {
       const pFinal = availableProducts.find(p => p.id === finalProductId);
@@ -123,46 +146,84 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
         responsible,
         notes
       });
-      alert(`Ordem de Produção salva como ${status}.`);
-      onComplete();
+      
+      setIsSuccess(true);
+      setTimeout(() => {
+        onComplete();
+      }, 1500);
+
     } catch (err: any) {
-      alert(err.message);
+      console.error(err);
+      error(err.message);
+      setIsFinalizing(false);
     }
   };
 
-  const { totalCost } = calculateProductionCosts(inputs, extraCosts, parseFloat(hours) || 0, parseFloat(laborCostPerHour) || 0, parseFloat(finalQty) || 0);
+  const { totalCost, unitCost } = calculateProductionCosts(inputs, extraCosts, parseFloat(hours) || 0, parseFloat(laborCostPerHour) || 0, parseFloat(finalQty) || 0);
+
+  const yieldPercentage = (parseFloat(initialWeight) && parseFloat(finalWeight)) 
+    ? ((parseFloat(finalWeight) / parseFloat(initialWeight)) * 100).toFixed(1)
+    : '0.0';
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-full md:w-[700px] bg-zinc-950 border-l border-zinc-900 shadow-2xl z-50 flex flex-col transform transition-transform duration-300">
-        
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-900 bg-zinc-950">
-          <h2 className="text-lg font-heading font-semibold text-zinc-50 tracking-tight">Nova Produção</h2>
-          <button onClick={onClose} className="p-2 text-zinc-500 hover:text-zinc-300 rounded-lg transition-colors">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          
-          <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+    <Drawer
+      isOpen={true}
+      onClose={onClose}
+      title="Nova Produção"
+      icon={<Factory size={20} />}
+      subtitle="Torra, Blend e Envase manual."
+      size="lg"
+      footer={
+        !isSuccess ? (
+          <div className="w-full flex justify-between items-center">
+             <div>
+               <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-1">Custo Total Projetado</div>
+               <div className="text-2xl font-heading font-semibold text-amber-500">
+                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalCost)}
+               </div>
+               {parseFloat(finalQty) > 0 && unitCost > 0 && (
+                 <div className="text-xs text-zinc-500 font-mono mt-0.5">
+                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(unitCost)} / un
+                 </div>
+               )}
+             </div>
+            <Button 
+              variant="conclusive"
+              size="lg"
+              onClick={handleFinalize}
+              disabled={isFinalizing}
+              isLoading={isFinalizing}
+              className="gap-2 px-8"
+            >
+              {!isFinalizing && <Check size={20} />}
+              Salvar Lote
+            </Button>
+          </div>
+        ) : undefined
+      }
+    >
+      {!isSuccess ? (
+        <div className="space-y-8">
+          <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
             {(['Rascunho', 'Em Produção', 'Concluído'] as ProductionStatus[]).map(s => (
               <button
                 key={s} onClick={() => setStatus(s)}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${status === s ? 'bg-zinc-800 text-zinc-50 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${status === s ? 'bg-zinc-800 text-amber-500 shadow-sm border border-zinc-700/50' : 'text-zinc-500 hover:text-zinc-300'}`}
               >
                 {s}
               </button>
             ))}
           </div>
 
-          <section className="space-y-4">
-             <h3 className="text-sm font-medium text-emerald-400">1. Produto Desejado</h3>
+          <section className="space-y-4 bg-zinc-900/40 p-5 rounded-2xl border border-zinc-800/50">
+             <div className="flex items-center gap-2 text-amber-500 mb-2">
+               <Factory size={16} />
+               <h3 className="text-xs font-bold uppercase tracking-widest">1. Produto Desejado</h3>
+             </div>
              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Produto Final</label>
-                  <select value={finalProductId} onChange={e => setFinalProductId(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 line-clamp-1">Produto Final</label>
+                  <select value={finalProductId} onChange={e => setFinalProductId(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors">
                     <option value="">Selecione...</option>
                     {availableProducts.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
@@ -170,104 +231,128 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Qtd Final Produzida ({availableProducts.find(p => p.id === finalProductId)?.unit || 'un'})</label>
-                  <input type="number" value={finalQty} onChange={e => setFinalQty(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm" placeholder="Ex: 50" />
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 line-clamp-1">Quantidade Produzida ({availableProducts.find(p => p.id === finalProductId)?.unit || 'un'})</label>
+                  <input type="number" value={finalQty} onChange={e => setFinalQty(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-amber-400 font-mono text-lg rounded-xl px-4 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors" placeholder="0" />
                 </div>
              </div>
           </section>
 
-          <section className="space-y-3">
-             <h3 className="text-sm font-medium text-emerald-400">2. Insumos (Café Cru, etc)</h3>
-             <div className="flex items-end gap-2">
-               <div className="flex-1">
-                 <select value={inputId} onChange={e => setInputId(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm">
+          <section className="space-y-4 bg-zinc-900/40 p-5 rounded-2xl border border-zinc-800/50">
+             <div className="flex items-center gap-2 text-amber-500 mb-2">
+               <Flame size={16} />
+               <h3 className="text-xs font-bold uppercase tracking-widest">2. Insumos (Café Cru, Embalagens)</h3>
+             </div>
+             <div className="flex flex-col sm:flex-row items-end gap-3">
+               <div className="flex-1 w-full">
+                 <select value={inputId} onChange={e => setInputId(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
                     <option value="">Buscar insumo...</option>
                     {insumos.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} (Estoque: {p.currentStock})</option>
+                      <option key={p.id} value={p.id}>{p.name} (Est. {p.currentStock})</option>
                     ))}
                   </select>
                </div>
-               <div className="w-24">
-                 <input type="number" placeholder="Qtd" value={inputQty} onChange={e => setInputQty(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm" />
+               <div className="w-full sm:w-28">
+                 <input type="number" placeholder="Qtd" value={inputQty} onChange={e => setInputQty(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 font-mono rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                </div>
-               <button onClick={handleAddInput} type="button" className="bg-zinc-800 text-zinc-50 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-700">Incluir</button>
+               <Button variant="secondary" onClick={handleAddInput} type="button" className="w-full sm:w-auto h-[46px] gap-2">
+                 <Plus size={16}/> Incluir
+               </Button>
              </div>
-             {inputs.map(i => (
-                <div key={i.productId} className="flex justify-between items-center bg-zinc-900/50 border border-zinc-800 p-2 rounded-lg text-sm">
-                  <span className="text-zinc-300">{i.name}</span>
-                  <div className="flex gap-4 items-center">
-                    <span className="text-zinc-400">{i.qty} {availableProducts.find(p=>p.id===i.productId)?.unit}</span>
-                    <button onClick={() => setInputs(prev => prev.filter(x => x.productId !== i.productId))} className="text-red-400"><Trash2 size={14}/></button>
+             
+             <div className="space-y-2 mt-4">
+               {inputs.map(i => (
+                  <div key={i.productId} className="flex justify-between items-center bg-zinc-950/80 border border-zinc-800 p-4 rounded-xl text-sm group transition-colors hover:border-zinc-700">
+                    <span className="text-zinc-200 font-medium">{i.name}</span>
+                    <div className="flex gap-4 items-center">
+                      <span className="text-zinc-400 font-mono bg-zinc-900 px-2 py-1 rounded">{i.qty} {availableProducts.find(p=>p.id===i.productId)?.unit}</span>
+                      <button onClick={() => setInputs(prev => prev.filter(x => x.productId !== i.productId))} className="text-zinc-600 hover:text-red-400 transition-colors">
+                        <Trash2 size={16}/>
+                      </button>
+                    </div>
                   </div>
-                </div>
-             ))}
-          </section>
-
-          <section className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800/50">
-             <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">Peso Inicial Seco (kg)</label>
-                <input type="number" value={initialWeight} onChange={e => setInitialWeight(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm" placeholder="Ex: 60" />
-             </div>
-             <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">Peso Final Torrado (kg)</label>
-                <input type="number" value={finalWeight} onChange={e => setFinalWeight(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm" placeholder="Ex: 50.4" />
+               ))}
+               {inputs.length === 0 && (
+                 <div className="text-center py-6 text-zinc-600 text-sm border border-dashed border-zinc-800 rounded-xl">
+                   Nenhum insumo adicionado.
+                 </div>
+               )}
              </div>
           </section>
 
-          <section className="pt-4 border-t border-zinc-800/50 space-y-3">
-             <h3 className="text-sm font-medium text-emerald-400">3. Custos Adicionais & Mão de Obra</h3>
+          <section className="grid grid-cols-2 gap-4">
+             <div className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50">
+                <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Peso Verde Inicial (kg)</label>
+                <input type="number" value={initialWeight} onChange={e => setInitialWeight(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 font-mono text-lg rounded-xl px-4 py-2 focus:outline-none focus:border-amber-500" placeholder="0.0" />
+             </div>
+             <div className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 relative overflow-hidden">
+                <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Peso Final Torrado (kg)</label>
+                <input type="number" value={finalWeight} onChange={e => setFinalWeight(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-amber-400 font-mono text-lg rounded-xl px-4 py-2 focus:outline-none focus:border-amber-500" placeholder="0.0" />
+                
+                {parseFloat(finalWeight) > 0 && parseFloat(initialWeight) > 0 && (
+                  <div className="absolute top-4 right-4 bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                    Yield {yieldPercentage}%
+                  </div>
+                )}
+             </div>
+          </section>
+
+          <section className="space-y-4 bg-zinc-900/40 p-5 rounded-2xl border border-zinc-800/50">
+             <h3 className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-2">3. Mão de Obra e Custos Extras</h3>
              <div className="grid grid-cols-2 gap-4">
                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Tempo Gasto (Horas)</label>
-                  <input type="number" value={hours} onChange={e => setHours(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm" placeholder="Ex: 2.5" />
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Tempo Gasto (Horas)</label>
+                  <input type="number" value={hours} onChange={e => setHours(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-2 text-sm focus:outline-none" placeholder="Ex: 2.5" />
                </div>
                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Custo da Hora (R$)</label>
-                  <input type="number" value={laborCostPerHour} onChange={e => setLaborCostPerHour(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm" placeholder="Ex: 25.00" />
+                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Custo da Hora (R$)</label>
+                  <input type="number" value={laborCostPerHour} onChange={e => setLaborCostPerHour(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-2 text-sm focus:outline-none" placeholder="Ex: 25.00" />
                </div>
              </div>
 
-             <div className="flex items-end gap-2 mt-4">
-               <div className="flex-1">
-                 <input type="text" placeholder="Ex: Embalagem 250g, Gás..." value={extraDesc} onChange={e => setExtraDesc(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm" />
+             <div className="flex items-end gap-3 mt-4">
+               <div className="flex-1 w-full">
+                 <input type="text" placeholder="Ex: Gás, Perfil de torra extra..." value={extraDesc} onChange={e => setExtraDesc(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 text-sm focus:outline-none" />
                </div>
                <div className="w-24">
-                 <input type="number" placeholder="R$" value={extraAmount} onChange={e => setExtraAmount(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm" />
+                 <input type="number" placeholder="R$" value={extraAmount} onChange={e => setExtraAmount(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 text-sm focus:outline-none" />
                </div>
-               <button onClick={handleAddExtra} type="button" className="bg-zinc-800 text-zinc-50 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-700"><Plus size={16}/></button>
+               <Button variant="secondary" onClick={handleAddExtra} type="button" className="h-[46px]"><Plus size={16}/></Button>
              </div>
-             {extraCosts.map((e, idx) => (
-                <div key={idx} className="flex justify-between items-center bg-zinc-900/50 border border-zinc-800 p-2 rounded-lg text-sm">
-                  <span className="text-zinc-300">{e.description}</span>
-                  <div className="flex gap-4 items-center">
-                    <span className="text-zinc-400">R$ {e.amount.toFixed(2)}</span>
-                    <button onClick={() => setExtraCosts(prev => prev.filter((_, i) => i !== idx))} className="text-red-400"><Trash2 size={14}/></button>
+             <div className="space-y-2 mt-4">
+               {extraCosts.map((e, idx) => (
+                  <div key={idx} className="flex justify-between items-center bg-zinc-950/80 border border-zinc-800 p-3 rounded-xl text-sm">
+                    <span className="text-zinc-300">{e.description}</span>
+                    <div className="flex gap-4 items-center">
+                      <span className="text-zinc-400 font-mono">{formatBRL(e.amount)}</span>
+                      <button onClick={() => setExtraCosts(prev => prev.filter((_, i) => i !== idx))} className="text-zinc-600 hover:text-red-400 transition-colors"><Trash2 size={14}/></button>
+                    </div>
                   </div>
-                </div>
-             ))}
+               ))}
+             </div>
           </section>
 
           <section>
-            <label className="block text-xs font-medium text-zinc-400 mb-1">Observações do Mestre</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm resize-none" placeholder="Perfil de torra, notas sensoriais..."></textarea>
+            <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Observações do Mestre Torrador</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-50 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-amber-500 transition-colors" placeholder="Notas sensoriais, curva de torra, umidade, tempo extra de resfriamento..."></textarea>
           </section>
-
         </div>
-
-        <div className="border-t border-zinc-900 bg-zinc-950 p-6 flex items-center justify-between gap-4">
-           <div>
-             <div className="text-xs text-zinc-500 uppercase font-semibold">Custo Total Projetado</div>
-             <div className="text-xl font-semibold text-emerald-400">R$ {totalCost.toFixed(2)}</div>
-           </div>
-          <button 
-            onClick={handleFinalize}
-            className="flex-1 flex items-center justify-center gap-2 bg-emerald-500 text-emerald-950 hover:bg-emerald-400 font-semibold py-3.5 rounded-xl transition-colors"
-          >
-            <Check size={20} />
-            Salvar Lote
-          </button>
-        </div>
-      </div>
-    </>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex-1 flex flex-col items-center justify-center p-8 text-center"
+        >
+          <div className="w-24 h-24 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 mb-6 shadow-[0_0_40px_rgba(197,152,104,0.2)]">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
+              <Check size={48} strokeWidth={1.5} />
+            </motion.div>
+          </div>
+          <h3 className="text-2xl font-heading font-semibold text-zinc-100 mb-2">Lote Registrado</h3>
+          <p className="text-zinc-400 max-w-sm">
+            O lote foi salvo com status de {status}. Os custos foram apurados com sucesso.
+          </p>
+        </motion.div>
+      )}
+    </Drawer>
   );
 }

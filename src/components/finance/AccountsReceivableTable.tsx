@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { CheckCircle2, ArrowDownRight } from 'lucide-react';
 import { FinancialTransaction } from '../../domain/types';
 import { Card, CardContent } from '../ui/Card';
@@ -31,7 +32,7 @@ export function AccountsReceivableTable({ receivables, onMarkPaid }: AccountsRec
                   <td className="px-6 py-4 font-medium text-zinc-100">{new Date(t.date).toLocaleDateString('pt-BR')}</td>
                   <td className="px-6 py-4 text-zinc-300 group-hover:text-amber-500 transition-colors">{t.description}</td>
                   <td className="px-6 py-4"><span className="text-[10px] font-semibold tracking-wider text-zinc-400 bg-zinc-800/50 uppercase px-2.5 py-1 rounded-sm">{t.category}</span></td>
-                  <td className="px-6 py-4 text-right font-medium font-mono text-emerald-500">R$ {t.amount.toFixed(2)}</td>
+                  <td className="px-6 py-4 text-right font-medium font-mono text-emerald-500">{formatBRL(t.amount)}</td>
                   <td className="px-6 py-4">
                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${
                         t.status === 'Atrasado' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'

@@ -12,6 +12,8 @@ import { Fiscal } from './pages/Fiscal';
 import { Configuracoes } from './pages/Configuracoes';
 import { Relatorios } from './pages/Relatorios';
 import { RepositoryProvider, DataProviderType } from './repositories/RepositoryProvider';
+import { ToastProvider } from './components/ui/Toast';
+import { ConfirmProvider } from './components/ui/ConfirmDialog';
 
 import { Equipe } from './pages/Equipe';
 import { AssinaturasAdmin } from './pages/AssinaturasAdmin';
@@ -78,23 +80,6 @@ export default function App() {
     localStorage.setItem('DATA_MODE', 'mock');
   };
 
-  // Helper attached to window for manual testing of API directly in preview
-  // without building a full UI right now.
-  (window as any).loginAdmin = async () => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'admin@demo.local', password: 'admin123' })
-    });
-    const data = await res.json();
-    if (data.token) {
-      localStorage.setItem('gestaoos_token', data.token);
-      alert('Login feito! Token salvo.');
-    } else {
-      alert('Falha: ' + JSON.stringify(data));
-    }
-  };
-
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard': 
@@ -146,25 +131,29 @@ export default function App() {
 
   return (
     <RepositoryProvider providerType={providerType} onFallbackToMock={handleFallback}>
-      {hasFallenBack && (
-        <div className="bg-red-950 border-b border-red-900/50 text-red-500 text-sm px-4 py-3 text-center relative z-[60] flex flex-col sm:flex-row items-center justify-center gap-2">
-          <span><strong>Erro de Conexão:</strong> Não foi possível acessar o servidor da base de dados ({localStorage.getItem('gestaoos_api_base_url') || 'Local'}).</span>
-          <button onClick={() => setCurrentPage('conexao')} className="bg-red-900 hover:bg-red-800 text-white px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider transition-colors ml-2">Configurar Conexão</button>
-        </div>
-      )}
-      <Shell currentPage={currentPage} onNavigate={setCurrentPage}>
-        {renderPage()}
-      </Shell>
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-20 md:bottom-6 right-6 flex flex-col gap-2 z-50 items-end opacity-50 hover:opacity-100 transition-opacity">
-          <button 
-            onClick={toggleProvider}
-            className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-500 px-3 py-1.5 rounded-md hover:text-amber-500 hover:border-amber-500/50 shadow-xl transition-all"
-          >
-            {hasFallenBack ? 'MOCK FLBK' : providerType.toUpperCase()}
-          </button>
-        </div>
-      )}
+      <ToastProvider>
+        <ConfirmProvider>
+          {hasFallenBack && (
+            <div className="bg-red-950 border-b border-red-900/50 text-red-500 text-sm px-4 py-3 text-center relative z-[60] flex flex-col sm:flex-row items-center justify-center gap-2">
+              <span><strong>Erro de Conexão:</strong> Não foi possível acessar o servidor da base de dados ({localStorage.getItem('gestaoos_api_base_url') || 'Local'}).</span>
+              <button onClick={() => setCurrentPage('conexao')} className="bg-red-900 hover:bg-red-800 text-white px-3 py-1 rounded text-xs font-semibold uppercase tracking-wider transition-colors ml-2">Configurar Conexão</button>
+            </div>
+          )}
+          <Shell currentPage={currentPage} onNavigate={setCurrentPage}>
+            {renderPage()}
+          </Shell>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="fixed bottom-20 md:bottom-6 right-6 flex flex-col gap-2 z-50 items-end opacity-50 hover:opacity-100 transition-opacity">
+              <button 
+                onClick={toggleProvider}
+                className="text-[10px] font-mono bg-zinc-900 border border-zinc-800 text-zinc-500 px-3 py-1.5 rounded-md hover:text-amber-500 hover:border-amber-500/50 shadow-xl transition-all"
+              >
+                {hasFallenBack ? 'MOCK FLBK' : providerType.toUpperCase()}
+              </button>
+            </div>
+          )}
+        </ConfirmProvider>
+      </ToastProvider>
     </RepositoryProvider>
   );
 }

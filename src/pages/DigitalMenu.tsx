@@ -1,3 +1,4 @@
+import { formatBRL } from '../lib/format';
 import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { safeFetch } from '../repositories/api/apiClient';
@@ -9,9 +10,13 @@ import { Card, CardContent } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { QrCode, Link as LinkIcon, Plus, Store, Target, Settings, Layers, Package, ShoppingBag, Edit, Copy } from 'lucide-react';
 import { StatusBadge } from '../components/ui/StatusBadge';
+import { useConfirm } from '../components/ui/ConfirmDialog';
+import { useToast } from '../components/ui/Toast';
 
 export function DigitalMenu() {
   const { digitalMenuRepo } = useRepositories();
+  const confirm = useConfirm();
+  const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'items' | 'orders' | 'settings'>('overview');
   const [config, setConfig] = useState<DigitalMenuConfig | null>(null);
   const [categories, setCategories] = useState<DigitalMenuCategory[]>([]);
@@ -59,7 +64,8 @@ export function DigitalMenu() {
            });
            const mods = await digitalMenuRepo.getModifiers(activeItemForMod.id);
            setActiveItemMods(mods);
-       } catch(e) { alert('Erro'); }
+           success('Grupo adicionado');
+       } catch(e) { error('Erro'); }
   };
 
   const addModifierOption = async (groupId: string) => {
@@ -78,7 +84,8 @@ export function DigitalMenu() {
            });
            const mods = await digitalMenuRepo.getModifiers(activeItemForMod.id);
            setActiveItemMods(mods);
-       } catch(e) { alert('Erro'); }
+           success('Opção adicionada');
+       } catch(e) { error('Erro'); }
   };
 
   const checkMpStatus = async () => {
@@ -118,7 +125,7 @@ export function DigitalMenu() {
     if (!config?.slug) return;
     const url = `${window.location.origin}/menu/${config.slug}`;
     navigator.clipboard.writeText(url);
-    alert('Link copiado: ' + url);
+    success('Link copiado: ' + url);
   };
 
   if (loading) {
@@ -216,7 +223,7 @@ export function DigitalMenu() {
                    <div className="flex justify-between items-center group">
                      <span className="text-zinc-500 font-medium text-sm group-hover:text-zinc-300 transition-colors">Faturamento Web</span>
                      <span className="text-amber-500 font-medium font-mono text-xl">
-                       R$ {orders.reduce((acc, o) => acc + o.total, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                       {formatBRL(orders.reduce((acc, o) => acc + o.total, 0))}
                      </span>
                    </div>
                  </div>
@@ -275,7 +282,7 @@ export function DigitalMenu() {
                                                     <div className="text-xs text-zinc-500 flex items-center gap-2 mt-1">
                                                        <span>{new Date(order.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                                                        <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
-                                                       <span className="font-mono text-emerald-500">R$ {order.total.toFixed(2)}</span>
+                                                       <span className="font-mono text-emerald-500">{formatBRL(order.total)}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -383,7 +390,7 @@ export function DigitalMenu() {
                 <div key={i.id} className="p-4 flex justify-between items-center text-sm hover:bg-zinc-800/30 transition-colors group">
                   <div className="flex flex-col">
                     <span className="text-zinc-300 font-medium group-hover:text-zinc-50 transition-colors">{i.name}</span>
-                    <span className="text-amber-500 font-mono text-xs mt-1">R$ {i.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    <span className="text-amber-500 font-mono text-xs mt-1">{formatBRL(i.price)}</span>
                   </div>
                   <div className="flex items-center gap-4">
                       <StatusBadge status={i.active ? 'Listado' : 'Oculto'} variant={i.active ? 'success' : 'default'} />
@@ -492,8 +499,8 @@ export function DigitalMenu() {
                                try {
                                  const data = await safeFetch('/api/payments/mercadopago/connect-url');
                                  if (data.url) window.location.href = data.url;
-                                 else if (data.error) alert(`Erro: ${data.message || data.error}`);
-                               } catch(e) { alert('Erro ao iniciar conexão.'); }
+                                 else if (data.error) error(`Erro: ${data.message || data.error}`);
+                               } catch(e) { error('Erro ao iniciar conexão.'); }
                              }}
                              className="w-full justify-center bg-[#009EE3] hover:bg-[#008ACB] text-white"
                           >
@@ -520,8 +527,11 @@ export function DigitalMenu() {
                           <button 
                             onClick={() => {
                               safeFetch('/api/payments/mercadopago/disconnect', { method: 'POST' })
-                                .then(() => checkMpStatus())
-                                .catch(e => alert('Erro ao desconectar'));
+                                .then(() => {
+                                  checkMpStatus();
+                                  success('Autenticação revogada');
+                                })
+                                .catch(e => error('Erro ao desconectar'));
                             }}
                             className="text-[10px] text-red-400/80 hover:text-red-400 font-medium underline uppercase mt-2 pt-2 border-t border-[#009EE3]/20 w-full text-left"
                           >
@@ -537,7 +547,7 @@ export function DigitalMenu() {
                 
                 <div className="pt-6 flex justify-end">
                   <Button 
-                    onClick={() => config && digitalMenuRepo.updateConfig(config).then(res => alert('Salvo!'))}
+                    onClick={() => config && digitalMenuRepo.updateConfig(config).then(res => success('Alterações salvas!'))}
                     className="w-full sm:w-auto"
                   >
                     Publicar Alterações
@@ -587,7 +597,13 @@ export function DigitalMenu() {
                                                   <Button 
                                                       variant="danger" size="sm"
                                                       onClick={async () => {
-                                                          if(confirm('Atenção operação destrutiva: Remover grupo de modificador?')) {
+                                                          const proceed = await confirm({
+                                                            title: 'Atenção',
+                                                            description: 'Operação destrutiva: Remover grupo de modificado?',
+                                                            confirmText: 'Sim, Remover',
+                                                            type: 'danger'
+                                                          });
+                                                          if(proceed) {
                                                               await digitalMenuRepo.deleteModifierGroup(group.id);
                                                               setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod.id));
                                                           }
@@ -599,7 +615,7 @@ export function DigitalMenu() {
                                                       <div key={opt.id} className="flex justify-between items-center bg-zinc-900/50 py-2.5 px-4 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors">
                                                           <span className="text-sm font-medium text-zinc-300">{opt.name}</span>
                                                           <div className="flex items-center gap-6">
-                                                              <span className="text-xs font-mono font-medium text-amber-500">R$ {opt.price.toFixed(2)}</span>
+                                                              <span className="text-xs font-mono font-medium text-amber-500">{formatBRL(opt.price)}</span>
                                                               <button onClick={async () => {
                                                                   await digitalMenuRepo.deleteModifierOption(opt.id);
                                                                   setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod.id));

@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { useState, useEffect } from 'react';
 import { useRepositories } from '../../repositories/RepositoryProvider';
 import { DREData } from '../../repositories/interfaces/IFinancialRepository';
@@ -18,7 +19,7 @@ export function SimpleDRE({ refreshKey }: { refreshKey?: number }) {
      else if (!isNegative && value > 0) color = 'text-emerald-400';
      
      const prefix = isNegative && value > 0 ? '- ' : '';
-     return <span className={`font-mono text-sm tracking-tight ${color}`}>{prefix}R$ {value.toFixed(2)}</span>;
+     return <span className={`font-mono text-sm tracking-tight ${color}`}>{prefix}{formatBRL(value)}</span>;
   };
 
   return (
@@ -55,7 +56,7 @@ export function SimpleDRE({ refreshKey }: { refreshKey?: number }) {
          <div className="flex justify-between items-center py-4 mt-2 border-t-2 border-zinc-700 bg-emerald-500/5 px-4 rounded font-semibold shadow-inner">
             <span className="text-emerald-400 font-heading">(=) Resultado Operacional (Lucro Líquido Estimado)</span>
             <span className={`font-mono text-lg tracking-tight ${dre.resultadoOperacional >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              R$ {dre.resultadoOperacional.toFixed(2)}
+              {formatBRL(dre.resultadoOperacional)}
             </span>
          </div>
          <div className="text-right text-xs text-emerald-500/70 px-4">

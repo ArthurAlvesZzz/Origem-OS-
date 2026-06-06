@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../../../repositories/RepositoryProvider';
 import { ProductionRecipeRecord, GreenCoffeeLotRecord } from '../../../repositories/interfaces/IAdvancedProductionRepository';
 import { X, Save, Plus, Trash } from 'lucide-react';
+import { useToast } from '../../../components/ui/Toast';
 
 interface RecipeDrawerProps {
   onClose: () => void;
@@ -9,6 +10,7 @@ interface RecipeDrawerProps {
 }
 
 export function RecipeDrawer({ onClose, onSuccess }: RecipeDrawerProps) {
+  const { success, error: toastError, info } = useToast();
   const { advancedProductionRepo } = useRepositories();
   const [loading, setLoading] = useState(false);
   const [lots, setLots] = useState<GreenCoffeeLotRecord[]>([]);
@@ -27,13 +29,13 @@ export function RecipeDrawer({ onClose, onSuccess }: RecipeDrawerProps) {
     setLoading(true);
     try {
       if (formData.inputs?.length === 0) {
-        alert('Adicione pelo menos um grão no blend.');
+        toastError('Adicione pelo menos um grão no blend.');
         return;
       }
       await advancedProductionRepo.createRecipe(formData);
       onSuccess();
     } catch (err) {
-      alert('Erro ao salvar receita.');
+      toastError('Erro ao salvar receita.');
     } finally {
       setLoading(false);
     }

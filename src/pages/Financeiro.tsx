@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../components/ui/PageHeader';
-import { Plus } from 'lucide-react';
+import { Plus, Receipt } from 'lucide-react';
 import { FinancialSummaryCards } from '../components/finance/FinancialSummaryCards';
 import { AccountsReceivableTable } from '../components/finance/AccountsReceivableTable';
 import { AccountsPayableTable } from '../components/finance/AccountsPayableTable';
@@ -11,8 +11,10 @@ import { PaymentGatewayPanel } from '../components/finance/PaymentGatewayPanel';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { FinancialTransaction } from '../domain/types';
 import { Button } from '../components/ui/Button';
+import { useToast } from '../components/ui/Toast';
 
 export function Financeiro() {
+  const { success, error: toastError, info } = useToast();
   const [activeTab, setActiveTab] = useState<'Visão Geral' | 'Receber' | 'Pagar' | 'Fluxo de Caixa' | 'DRE' | 'Pagamentos Online'>('Visão Geral');
   const [isExpenseDrawerOpen, setIsExpenseDrawerOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -26,12 +28,24 @@ export function Financeiro() {
     financialRepo.getAccountsPayable().then(setPayables);
   }, [financialRepo, refreshKey]);
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#nova-despesa') {
+        setIsExpenseDrawerOpen(true);
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const handleMarkPaid = async (id: string) => {
     try {
       await financialRepo.markTransactionAsPaid(id);
       setRefreshKey(prev => prev + 1);
     } catch (e: any) {
-      alert(e.message);
+      toastError(e.message);
     }
   };
 
@@ -48,9 +62,10 @@ export function Financeiro() {
         action={
           <Button 
             onClick={() => setIsExpenseDrawerOpen(true)}
+            variant="flow"
             className="flex items-center gap-2"
           >
-            <Plus size={16} /> Lançar Despesa
+            <Receipt size={16} className="transition-transform group-hover:scale-110 duration-300" /> Lançar Despesa
           </Button>
         }
       />
@@ -60,8 +75,9 @@ export function Financeiro() {
         {(['Visão Geral', 'Receber', 'Pagar', 'Fluxo de Caixa', 'DRE', 'Pagamentos Online'] as const).map(tab => {
           const isActive = activeTab === tab;
           return (
-            <button
+            <Button
               key={tab}
+              variant="ghost"
               onClick={() => setActiveTab(tab)}
               className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                 isActive 
@@ -70,7 +86,7 @@ export function Financeiro() {
               }`}
             >
               {tab}
-            </button>
+            </Button>
           )
         })}
       </div>

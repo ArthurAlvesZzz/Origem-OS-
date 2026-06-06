@@ -1,7 +1,10 @@
+import { formatBRL } from '../lib/format';
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Input } from '../components/ui/Input';
 import { Plus, Search, Edit2 } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Pagination } from '../components/ui/Pagination';
 import { useState, useEffect } from 'react';
 import { ProductFormDrawer } from '../components/catalog/ProductFormDrawer';
 import { Product } from '../domain/types';
@@ -11,7 +14,12 @@ export function Catalogo() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>(undefined);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
   
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
   const { productRepo } = useRepositories();
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -39,18 +47,30 @@ export function Catalogo() {
     setRefreshKey(prev => prev + 1);
   };
 
+  const filteredProducts = products.filter(p =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto" key={refreshKey}>
       <PageHeader 
         title="Catálogo de Produtos" 
         description="Gerencie seus cafés, insumos e variações." 
         action={
-          <button 
+          <Button 
             onClick={handleOpenNew}
-            className="flex items-center gap-2 bg-zinc-50 text-zinc-950 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors"
+            className="flex items-center gap-2"
           >
             <Plus size={16} /> Novo Produto
-          </button>
+          </Button>
         }
       />
 
@@ -58,7 +78,9 @@ export function Catalogo() {
         <div className="flex-1 w-full max-w-xl">
           <Input 
             icon={<Search size={18} className="text-zinc-500" />}
-            placeholder="Buscar por nome ou SKU..." 
+            placeholder="Buscar por nome ou SKU..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
@@ -79,7 +101,7 @@ export function Catalogo() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
-              {products.map((p) => {
+              {paginatedProducts.map((p) => {
                 const margin = p.price > 0 ? ((p.price - p.cost) / p.price) * 100 : 0;
                 return (
                   <tr key={p.id} className="hover:bg-zinc-800/50 transition-colors">
@@ -93,9 +115,9 @@ export function Catalogo() {
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-800 text-zinc-400 border border-zinc-700">Inativo</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">R$ {p.cost.toFixed(2)}</td>
+                    <td className="px-6 py-4">{formatBRL(p.cost)}</td>
                     <td className="px-6 py-4 font-medium text-zinc-50">
-                      {p.price > 0 ? `R$ ${p.price.toFixed(2)}` : '-'}
+                      {p.price > 0 ? `${formatBRL(p.price)}` : '-'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       {p.price > 0 ? (
@@ -117,7 +139,7 @@ export function Catalogo() {
                   </tr>
                 );
               })}
-              {products.length === 0 && (
+              {filteredProducts.length === 0 && (
                 <tr>
                   <td colSpan={8} className="p-0">
                     <EmptyState
@@ -131,6 +153,15 @@ export function Catalogo() {
             </tbody>
           </table>
         </div>
+        {filteredProducts.length > 0 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredProducts.length}
+          />
+        )}
       </div>
 
       {isDrawerOpen && (

@@ -4,17 +4,25 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
-import { Search, Plus, ArrowDownToLine, ArrowUpToLine, Settings2, PackageSearch } from 'lucide-react';
+import { Search, Plus, ArrowDownToLine, ArrowUpToLine, Settings2, PackageSearch, Download } from 'lucide-react';
+import { Pagination } from '../components/ui/Pagination';
 import { useState, useEffect } from 'react';
 import { StockMovementDrawer } from '../components/inventory/StockMovementDrawer';
 import { StockMovementsTable } from '../components/inventory/StockMovementsTable';
 import { MovementType, Product } from '../domain/types';
 import { useRepositories } from '../repositories/RepositoryProvider';
+import { exportToCSV } from '../lib/export';
 
 export function Estoque() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [initialType, setInitialType] = useState<MovementType>('Entrada');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
 
   const { productRepo, inventoryRepo } = useRepositories();
   const [productsData, setProductsData] = useState<(Product & { currentStock: number })[]>([]);
@@ -43,6 +51,18 @@ export function Estoque() {
     setRefreshKey(prev => prev + 1);
   };
 
+  const filteredProducts = productsData.filter(p =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500" key={refreshKey}>
       <PageHeader 
@@ -50,26 +70,37 @@ export function Estoque() {
         description="Gestão de saldos físicos, inventário e histórico de movimentações." 
         action={
           <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => handleOpenNew('Entrada')} className="gap-2 border-zinc-700 bg-zinc-900">
+            <Button variant="secondary" onClick={() => handleOpenNew('Entrada')} className="gap-2">
               <ArrowDownToLine size={16} className="text-emerald-500" /> <span className="hidden sm:inline">Entrada</span>
             </Button>
-            <Button variant="outline" onClick={() => handleOpenNew('Perda')} className="gap-2 border-zinc-700 bg-zinc-900">
+            <Button variant="secondary" onClick={() => handleOpenNew('Perda')} className="gap-2">
               <ArrowUpToLine size={16} className="text-red-500" /> <span className="hidden sm:inline">Perda</span>
             </Button>
-            <Button onClick={() => handleOpenNew('Ajuste')} className="gap-2 shadow-lg shadow-amber-500/20">
-              <Settings2 size={16} /> Ajuste Geral
+            <Button variant="flow" onClick={() => handleOpenNew('Ajuste')} className="gap-2">
+              <Settings2 size={16} className="transition-transform group-hover:rotate-180 duration-500" /> Ajuste Geral
             </Button>
           </div>
         }
       />
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6 relative z-10">
-        <div className="flex-1 max-w-xl">
+      <div className="flex flex-col md:flex-row gap-4 mb-6 relative z-10 w-full sm:w-auto">
+        <div className="flex-1 w-full max-w-xl">
           <Input 
             icon={<Search size={18} className="text-zinc-500" />}
             placeholder="Buscar item ou SKU em estoque..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <Button variant="outline" className="gap-2 sm:w-auto w-full justify-center" onClick={() => exportToCSV(filteredProducts, 'estoque', [
+          { key: 'sku', label: 'SKU' },
+          { key: 'name', label: 'Produto' },
+          { key: 'category', label: 'Categoria' },
+          { key: 'currentStock', label: 'Saldo Atual' },
+          { key: 'minStock', label: 'Estoque Mín.' }
+        ])}>
+          <Download size={16} className="text-zinc-500" /> Exportar CSV
+        </Button>
       </div>
 
       <Card className="mb-8 overflow-hidden">
@@ -84,7 +115,7 @@ export function Estoque() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/50">
-              {productsData.map((p) => {
+              {paginatedProducts.map((p) => {
                 const isLow = p.currentStock <= p.minStock;
                 return (
                   <tr key={p.id} className="hover:bg-zinc-800/30 transition-colors group">
@@ -112,7 +143,7 @@ export function Estoque() {
                 );
               })}
               
-              {productsData.length === 0 && (
+              {filteredProducts.length === 0 && (
                 <tr>
                   <td colSpan={4} className="p-0 border-none">
                     <div className="py-16 flex items-center justify-center">
@@ -128,6 +159,15 @@ export function Estoque() {
             </tbody>
           </table>
         </div>
+        {filteredProducts.length > 0 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredProducts.length}
+          />
+        )}
       </Card>
 
       <div className="mb-2">

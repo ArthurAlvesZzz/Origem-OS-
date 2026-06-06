@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../../../repositories/RepositoryProvider';
 import { RoastProfileRecord, ProductionRecipeRecord } from '../../../repositories/interfaces/IAdvancedProductionRepository';
 import { X, Save } from 'lucide-react';
+import { useToast } from '../../../components/ui/Toast';
 
 interface ProfileDrawerProps {
   onClose: () => void;
@@ -9,6 +10,7 @@ interface ProfileDrawerProps {
 }
 
 export function ProfileDrawer({ onClose, onSuccess }: ProfileDrawerProps) {
+  const { success, error: toastError, info } = useToast();
   const { advancedProductionRepo } = useRepositories();
   const [loading, setLoading] = useState(false);
   const [recipes, setRecipes] = useState<ProductionRecipeRecord[]>([]);
@@ -28,7 +30,7 @@ export function ProfileDrawer({ onClose, onSuccess }: ProfileDrawerProps) {
       await advancedProductionRepo.createRoastProfile(formData);
       onSuccess();
     } catch (err) {
-      alert('Erro ao salvar perfil.');
+      toastError('Erro ao salvar perfil.');
     } finally {
       setLoading(false);
     }

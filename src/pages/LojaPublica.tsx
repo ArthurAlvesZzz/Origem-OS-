@@ -3,8 +3,10 @@ import { useRepositories } from '../repositories/RepositoryProvider';
 import { StorefrontPlan, SubscriptionRequestData } from '../repositories/interfaces/IStorefrontRepository';
 import { CheckCircle2, X, ArrowRight, QrCode, Play, Menu, ChevronDown, ChevronRight, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useToast } from '../components/ui/Toast';
 
 export function LojaPublica() {
+  const { success, error: toastError, info } = useToast();
   const { storefrontRepo, paymentRepo } = useRepositories();
   const [plans, setPlans] = useState<StorefrontPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +68,7 @@ export function LojaPublica() {
       });
       setTimeout(() => setCheckoutStep('pix'), 800); // add artificial delay for cinematic feel
     } catch (error) {
-       alert("Erro ao enviar interesse. Tente novamente.");
+       toastError("Erro ao enviar interesse. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }

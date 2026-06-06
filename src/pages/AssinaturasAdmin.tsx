@@ -3,10 +3,12 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { StorefrontPlan, SubscriptionRequestRecord, SubscriptionRecord } from '../repositories/interfaces/IStorefrontRepository';
 import { Coffee, Tag, Plus, CheckCircle2, XCircle, RotateCcw, Search, ExternalLink, Calendar, PauseCircle } from 'lucide-react';
+import { useToast } from '../components/ui/Toast';
 
 type Tab = 'overview' | 'plans' | 'requests' | 'active';
 
 export function AssinaturasAdmin() {
+  const { success, error: toastError, info } = useToast();
   const { storefrontRepo } = useRepositories();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [isLoading, setIsLoading] = useState(true);
@@ -53,7 +55,7 @@ export function AssinaturasAdmin() {
       await storefrontRepo.updateRequestStatus(id, status);
       fetchData();
     } catch (e) {
-      alert('Erro ao atualizar status');
+      toastError('Erro ao atualizar status');
     }
   };
 
@@ -62,7 +64,7 @@ export function AssinaturasAdmin() {
        await storefrontRepo.updateSubscriptionStatus(id, status);
        fetchData();
      } catch (e) {
-       alert('Erro ao atualizar status');
+       toastError('Erro ao atualizar status');
      }
   };
 

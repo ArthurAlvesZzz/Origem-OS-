@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { useState, useEffect } from 'react';
 import { useRepositories } from '../../repositories/RepositoryProvider';
 import { CashFlowData } from '../../repositories/interfaces/IFinancialRepository';
@@ -20,20 +21,20 @@ export function CashFlowPanel({ refreshKey }: { refreshKey?: number }) {
       <div className="space-y-3">
          <div className="flex justify-between text-sm">
             <span className="text-zinc-500">Saldo Atual (Caixa Livre)</span>
-            <span className="text-zinc-300 font-mono">R$ {data.saldoAtual.toFixed(2)}</span>
+            <span className="text-zinc-300 font-mono">{formatBRL(data.saldoAtual)}</span>
          </div>
          <div className="flex justify-between text-sm border-t border-zinc-800 pt-2 border-dashed">
             <span className="text-emerald-400/80">(+) Entradas Previstas</span>
-            <span className="text-emerald-400 font-mono">R$ {data.projectedIn.toFixed(2)}</span>
+            <span className="text-emerald-400 font-mono">{formatBRL(data.projectedIn)}</span>
          </div>
          <div className="flex justify-between text-sm border-b border-zinc-800 pb-2 border-dashed">
             <span className="text-red-400/80">(-) Saídas Previstas</span>
-            <span className="text-red-400 font-mono">R$ {data.projectedOut.toFixed(2)}</span>
+            <span className="text-red-400 font-mono">{formatBRL(data.projectedOut)}</span>
          </div>
          <div className="flex justify-between font-medium pt-1">
             <span className="text-zinc-300">Saldo Projetado</span>
             <span className={`font-mono text-lg ${data.projectedBalance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-               R$ {data.projectedBalance.toFixed(2)}
+               {formatBRL(data.projectedBalance)}
             </span>
          </div>
       </div>

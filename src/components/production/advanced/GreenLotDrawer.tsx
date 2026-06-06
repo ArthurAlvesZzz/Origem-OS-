@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useRepositories } from '../../../repositories/RepositoryProvider';
 import { GreenCoffeeLotRecord } from '../../../repositories/interfaces/IAdvancedProductionRepository';
 import { X, Save } from 'lucide-react';
+import { useToast } from '../../../components/ui/Toast';
 
 interface GreenLotDrawerProps {
   onClose: () => void;
@@ -10,6 +11,7 @@ interface GreenLotDrawerProps {
 }
 
 export function GreenLotDrawer({ onClose, onSuccess, lotId }: GreenLotDrawerProps) {
+  const { success, error: toastError, info } = useToast();
   const { advancedProductionRepo } = useRepositories();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<GreenCoffeeLotRecord>>({
@@ -28,7 +30,7 @@ export function GreenLotDrawer({ onClose, onSuccess, lotId }: GreenLotDrawerProp
       }
       onSuccess();
     } catch (err) {
-      alert('Erro ao salvar lote de grão verde.');
+      toastError('Erro ao salvar lote de grão verde.');
     } finally {
       setLoading(false);
     }

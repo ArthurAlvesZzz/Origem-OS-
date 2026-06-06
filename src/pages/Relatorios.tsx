@@ -6,9 +6,13 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { useConfirm } from '../components/ui/ConfirmDialog';
+import { useToast } from '../components/ui/Toast';
 
 export function Relatorios() {
   const { reportsRepo, settingsRepo } = useRepositories();
+  const confirm = useConfirm();
+  const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState('vendas');
   const [loading, setLoading] = useState(false);
   
@@ -54,26 +58,38 @@ export function Relatorios() {
 
   const handleGenerateDoc = async (type: string, title: string, snapshotJson: any) => {
     try {
-      if (window.confirm(`Gerar documento auxiliar impresso de ${title}?`)) {
+      const proceed = await confirm({
+        title: 'Gerar Documento',
+        description: `Gerar documento auxiliar impresso de ${title}?`,
+        confirmText: 'Gerar Documento'
+      });
+      if (proceed) {
         await reportsRepo.generateDocument({
           type,
           title,
           snapshotJson
         });
-        alert('Documento gerado. Você pode visualizá-lo na aba Documentos.');
+        success('Documento gerado. Você pode visualizá-lo na aba Documentos.');
       }
     } catch(err) {
-      alert('Erro ao gerar documento');
+      error('Erro ao gerar documento');
     }
   };
 
   const handleVoidDoc = async (id: string) => {
-    if(!window.confirm('Cancelar este documento? Ele ficará marcado como inválido.')) return;
+    const proceed = await confirm({
+      title: 'Cancelar Documento',
+      description: 'Cancelar este documento? Ele ficará marcado como inválido.',
+      confirmText: 'Sim, Cancelar',
+      type: 'danger'
+    });
+    if(!proceed) return;
     try {
       await reportsRepo.voidDocument(id);
+      success('Documento cancelado com sucesso.');
       loadData();
     } catch(err: any) {
-      alert(err.message);
+      error(err.message);
     }
   };
 

@@ -1,3 +1,4 @@
+import { formatBRL } from '../lib/format';
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -10,12 +11,18 @@ import { useRepositories } from '../repositories/RepositoryProvider';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Pagination } from '../components/ui/Pagination';
 
 export function Consignacao() {
   const [isNewDrawerOpen, setIsNewDrawerOpen] = useState(false);
   const [settleConsignment, setSettleConsignment] = useState<Consignment | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+  
   const { consignmentRepo } = useRepositories();
   const [consignments, setConsignments] = useState<Consignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +40,17 @@ export function Consignacao() {
     setRefreshKey(prev => prev + 1);
   };
 
+  const filteredConsignments = consignments.filter(c => 
+    c.partnerName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredConsignments.length / itemsPerPage);
+  const paginatedConsignments = filteredConsignments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col animate-in fade-in duration-500" key={refreshKey}>
       <PageHeader 
@@ -41,6 +59,7 @@ export function Consignacao() {
         action={
           <Button 
             onClick={() => setIsNewDrawerOpen(true)}
+            variant="flow"
             className="flex items-center gap-2"
           >
             <Plus size={16} /> Nova Remessa
@@ -53,6 +72,8 @@ export function Consignacao() {
           <Input 
             icon={<Search size={18} className="text-zinc-500" />}
             placeholder="Buscar parceiro..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
@@ -79,7 +100,7 @@ export function Consignacao() {
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-zinc-800/50">
-                   {consignments.map((c: Consignment) => {
+                   {paginatedConsignments.map((c: Consignment) => {
                      const totalSent = c.items.reduce((acc, i) => acc + i.qtySent, 0);
                      const isClosed = c.status === 'Fechada';
                      
@@ -93,18 +114,18 @@ export function Consignacao() {
                          <td className="px-6 py-4 font-semibold text-zinc-100 group-hover:text-amber-400 transition-colors">{c.partnerName}</td>
                          <td className="px-6 py-4 text-xs font-mono text-zinc-400">{new Date(c.dueDate).toLocaleDateString('pt-BR')}</td>
                          <td className="px-6 py-4 text-right font-mono text-zinc-300">{totalSent} un</td>
-                         <td className="px-6 py-4 text-right font-mono text-zinc-50 tracking-tight">R$ {c.expectedTotal.toFixed(2)}</td>
-                         <td className="px-6 py-4 text-right font-mono text-emerald-500 tracking-tight">R$ {c.soldTotal.toFixed(2)}</td>
+                         <td className="px-6 py-4 text-right font-mono text-zinc-50 tracking-tight">{formatBRL(c.expectedTotal)}</td>
+                         <td className="px-6 py-4 text-right font-mono text-emerald-500 tracking-tight">{formatBRL(c.soldTotal)}</td>
                          <td className="px-6 py-4">
                            <StatusBadge status={c.status} variant={variant} />
                          </td>
                          <td className="px-6 py-4 text-right">
                            {!isClosed ? (
                              <Button 
-                               variant="outline"
+                               variant="explore"
                                size="sm"
                                onClick={() => setSettleConsignment(c)}
-                               className="text-xs font-semibold hover:border-amber-500/50 hover:text-amber-500"
+                               className="text-xs font-semibold px-4"
                              >
                                Lançar Acerto
                              </Button>
@@ -133,6 +154,15 @@ export function Consignacao() {
              </div>
           )}
         </CardContent>
+        {filteredConsignments.length > 0 && !loading && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredConsignments.length}
+          />
+        )}
       </Card>
 
       {isNewDrawerOpen && (

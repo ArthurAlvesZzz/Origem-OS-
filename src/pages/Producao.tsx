@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Plus, Coffee, Scale, Beaker, Clock, List, FileText, Activity, CheckCircle } from 'lucide-react';
+import { Factory } from 'lucide-react';
 import { ProductionBatchTable } from '../components/production/ProductionBatchTable';
 import { ProductionBatchDrawer } from '../components/production/ProductionBatchDrawer';
 import { ProductionDetailDrawer } from '../components/production/ProductionDetailDrawer';
@@ -18,7 +19,11 @@ import { AdvancedBatchDrawer } from '../components/production/advanced/AdvancedB
 
 type Tab = 'demand' | 'orders' | 'greens' | 'recipes' | 'profiles' | 'quality' | 'traceability';
 
+import { Button } from '../components/ui/Button';
+import { useToast } from '../components/ui/Toast';
+
 export function Producao() {
+  const { success, error: toastError, info } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('orders');
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [demandInitialProduct, setDemandInitialProduct] = useState<string>();
@@ -48,37 +53,38 @@ export function Producao() {
         title="Controle de Produção" 
         description="Gestão de grãos verdes, receitas, perfis de torra e custeio." 
         action={
-          <button 
+          <Button 
             onClick={() => setIsNewOpen(true)}
-            className="flex items-center gap-2 bg-zinc-50 text-zinc-950 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors shadow"
+            variant="flow"
+            className="flex items-center gap-2"
           >
-            <Plus size={16} /> Nova Produção
-          </button>
+            <Factory size={16} className="transition-transform group-hover:scale-110 duration-300" /> Nova Produção
+          </Button>
         }
       />
 
       <div className="flex bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-fit mb-6 shadow-sm overflow-x-auto custom-scrollbar">
-        <button onClick={() => setActiveTab('demand')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'demand' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+        <Button variant="ghost" onClick={() => setActiveTab('demand')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'demand' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
            <Activity size={14} /> Demanda (Sob Demanda)
-        </button>
-        <button onClick={() => setActiveTab('orders')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'orders' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setActiveTab('orders')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'orders' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
            <List size={14} /> Ordens de Produção
-        </button>
-        <button onClick={() => setActiveTab('greens')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'greens' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setActiveTab('greens')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'greens' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
            <Coffee size={14} /> Grãos Verdes
-        </button>
-        <button onClick={() => setActiveTab('recipes')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'recipes' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setActiveTab('recipes')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'recipes' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
            <FileText size={14} /> Receitas
-        </button>
-        <button onClick={() => setActiveTab('profiles')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'profiles' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setActiveTab('profiles')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'profiles' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
            <Beaker size={14} /> Perfis de Torra
-        </button>
-        <button onClick={() => setActiveTab('quality')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'quality' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setActiveTab('quality')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'quality' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
            <CheckCircle size={14} /> Qualidade (CQ)
-        </button>
-        <button onClick={() => setActiveTab('traceability')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'traceability' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+        </Button>
+        <Button variant="ghost" onClick={() => setActiveTab('traceability')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'traceability' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
            <Activity size={14} /> Rastreabilidade
-        </button>
+        </Button>
       </div>
 
       {activeTab === 'orders' && (
@@ -121,7 +127,7 @@ export function Producao() {
         batches={batches} 
         onOpenDetail={setDetailBatch} 
         onFinalize={() => {
-          alert('Para testar finalização de um lote "Em Produção", use o botão de Ficha Técnica para visualizar ou crie um novo lote como Concluído.');
+          toastError('Para testar finalização de um lote "Em Produção", use o botão de Ficha Técnica para visualizar ou crie um novo lote como Concluído.');
         }}
       />
       </>

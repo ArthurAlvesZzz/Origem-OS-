@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../../../repositories/RepositoryProvider';
 import { QualityReviewRecord } from '../../../repositories/interfaces/IQualityRepository';
 import { X, Save, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { useToast } from '../../../components/ui/Toast';
 
 interface QualityReviewDrawerProps {
   reviewId: string;
@@ -10,6 +11,7 @@ interface QualityReviewDrawerProps {
 }
 
 export function QualityReviewDrawer({ reviewId, onClose, onSuccess }: QualityReviewDrawerProps) {
+  const { success, error: toastError, info } = useToast();
   const { qualityRepo } = useRepositories();
   const [loading, setLoading] = useState(false);
   const [review, setReview] = useState<QualityReviewRecord | null>(null);
@@ -58,7 +60,7 @@ export function QualityReviewDrawer({ reviewId, onClose, onSuccess }: QualityRev
       await qualityRepo.approveReview(reviewId, notes);
       onSuccess();
     } catch (e) {
-      alert('Erro ao aprovar lote.');
+      toastError('Erro ao aprovar lote.');
     } finally {
       setLoading(false);
     }
@@ -81,7 +83,7 @@ export function QualityReviewDrawer({ reviewId, onClose, onSuccess }: QualityRev
       await qualityRepo.rejectReview(reviewId, notes);
       onSuccess();
     } catch (e) {
-      alert('Erro ao reprovar lote.');
+      toastError('Erro ao reprovar lote.');
     } finally {
       setLoading(false);
     }

@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { useState, useEffect } from 'react';
 import { DollarSign, ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Briefcase } from 'lucide-react';
 import { useRepositories } from '../../repositories/RepositoryProvider';
@@ -23,7 +24,7 @@ export function FinancialSummaryCards({ refreshKey }: { refreshKey?: number }) {
                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Caixa Atual</span>
             </div>
          </div>
-         <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">R$ {summary.saldoEstimado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+         <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">{formatBRL(summary.saldoEstimado)}</div>
          <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 mt-3 flex items-center gap-1.5 relative z-10"><TrendingUp size={14}/> Dinheiro Realizado</div>
       </div>
       
@@ -35,7 +36,7 @@ export function FinancialSummaryCards({ refreshKey }: { refreshKey?: number }) {
                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">A Receber</span>
             </div>
          </div>
-         <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">R$ {summary.receitaPendente.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+         <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">{formatBRL(summary.receitaPendente)}</div>
          <div className="text-[11px] font-bold uppercase tracking-wider text-sky-500 mt-3 flex items-center gap-1.5 relative z-10">Previsto Futuro</div>
       </div>
 
@@ -47,7 +48,7 @@ export function FinancialSummaryCards({ refreshKey }: { refreshKey?: number }) {
                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Contas a Pagar</span>
             </div>
          </div>
-         <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">R$ {summary.contasAPagar.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+         <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">{formatBRL(summary.contasAPagar)}</div>
          <div className="text-[11px] font-bold uppercase tracking-wider text-red-500 mt-3 flex items-center gap-1.5 relative z-10"><TrendingDown size={14} /> Comprometido</div>
       </div>
 
@@ -59,7 +60,7 @@ export function FinancialSummaryCards({ refreshKey }: { refreshKey?: number }) {
                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Total Despesas</span>
             </div>
          </div>
-         <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">R$ {summary.despesasPagas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+         <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">{formatBRL(summary.despesasPagas)}</div>
          <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 mt-3 flex items-center gap-1.5 relative z-10">Acumulado Mes</div>
       </div>
     </div>

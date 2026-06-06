@@ -6,11 +6,13 @@ import { TenantProfile, Branch, BusinessRules, ProductionRules, ModuleFlags } fr
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { useToast } from '../components/ui/Toast';
 
 export function Configuracoes() {
   const { settingsRepo } = useRepositories();
   const [activeTab, setActiveTab] = useState('empresa');
   const [loading, setLoading] = useState(true);
+  const { success, error } = useToast();
 
   // States
   const [profile, setProfile] = useState<TenantProfile | null>(null);
@@ -50,8 +52,8 @@ export function Configuracoes() {
     try {
       const updated = await settingsRepo.updateProfile(profile);
       setProfile(updated);
-      alert('Perfil salvo com sucesso');
-    } catch (e) { alert('Erro ao salvar'); }
+      success('Perfil salvo com sucesso');
+    } catch (e) { error('Erro ao salvar'); }
   };
 
   const handleSaveBusinessRules = async () => {
@@ -59,8 +61,8 @@ export function Configuracoes() {
     try {
       const updated = await settingsRepo.updateBusinessRules(businessRules);
       setBusinessRules(updated);
-      alert('Regras salvas.');
-    } catch (e) { alert('Erro ao salvar'); }
+      success('Regras salvas.');
+    } catch (e) { error('Erro ao salvar'); }
   };
 
   const handleSaveProductionRules = async () => {
@@ -68,8 +70,8 @@ export function Configuracoes() {
     try {
       const updated = await settingsRepo.updateProductionRules(productionRules);
       setProductionRules(updated);
-      alert('Regras salvas.');
-    } catch (e) { alert('Erro ao salvar'); }
+      success('Regras salvas.');
+    } catch (e) { error('Erro ao salvar'); }
   };
 
   const handleSaveFlags = async () => {
@@ -77,8 +79,8 @@ export function Configuracoes() {
     try {
       const updated = await settingsRepo.updateModuleFlags(flags);
       setFlags(updated);
-      alert('Módulos salvos.');
-    } catch (e) { alert('Erro ao salvar'); }
+      success('Módulos salvos.');
+    } catch (e) { error('Erro ao salvar'); }
   };
 
   // Branch simple toggle

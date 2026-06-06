@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useRepositories } from '../../repositories/RepositoryProvider';
+import { useToast } from '../../components/ui/Toast';
 
 export function InsightsTab() {
+  const { success, error: toastError, info } = useToast();
   const { crmRepo } = useRepositories();
   const [insight, setInsight] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -11,7 +13,7 @@ export function InsightsTab() {
     setLoading(true);
     await crmRepo.recalculateCustomerScores();
     setLoading(false);
-    alert('Reprocessamento em lote concluído.');
+    toastError('Reprocessamento em lote concluído.');
   }
 
   async function loadInsight() {

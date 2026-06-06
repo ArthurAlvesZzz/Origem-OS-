@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { Search, Plus, Package } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Product } from '../../domain/types';
@@ -43,8 +44,12 @@ export function ProductSearch({ onSelectProduct }: ProductSearchProps) {
               {filteredProducts.map(p => (
                 <li key={p.id} className="p-3 hover:bg-zinc-900 transition-colors flex items-center justify-between group">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg border border-zinc-800 bg-zinc-900 group-hover:border-amber-500/30 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors">
-                      <Package size={20} />
+                    <div className="w-10 h-10 rounded-lg border border-zinc-800 bg-zinc-900 group-hover:border-amber-500/30 flex items-center justify-center text-zinc-500 group-hover:text-amber-500 transition-colors overflow-hidden shrink-0">
+                      {(p as any).imageUrl ? (
+                        <img src={(p as any).imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Package size={20} />
+                      )}
                     </div>
                     <div>
                       <div className="font-medium text-sm text-zinc-100 group-hover:text-amber-500 transition-colors">{p.name}</div>
@@ -55,7 +60,7 @@ export function ProductSearch({ onSelectProduct }: ProductSearchProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="text-sm font-medium font-mono text-zinc-300">R$ {p.price.toFixed(2)}</div>
+                    <div className="text-sm font-medium font-mono text-zinc-300">{formatBRL(p.price)}</div>
                     <Button 
                       onClick={() => onSelectProduct(p)}
                       variant="secondary"

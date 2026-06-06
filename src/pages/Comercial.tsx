@@ -1,18 +1,26 @@
+import { formatBRL } from '../lib/format';
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
-import { Plus, Search, Filter, ShoppingBag } from 'lucide-react';
+import { Plus, Search, Filter, ShoppingBag, Download } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { NewSaleDrawer } from '../components/sales/NewSaleDrawer';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { Order } from '../domain/types';
+import { Pagination } from '../components/ui/Pagination';
+import { exportToCSV } from '../lib/export';
 
 export function Comercial() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   const { orderRepo } = useRepositories();
   const [orders, setOrders] = useState<Order[]>([]);
 
@@ -20,10 +28,34 @@ export function Comercial() {
     orderRepo.getOrders().then(setOrders);
   }, [orderRepo, refreshKey]);
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#nova-venda') {
+        setIsDrawerOpen(true);
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+    handleHashChange(); // Check on mount
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   const handleSaleComplete = () => {
     setIsDrawerOpen(false);
     setRefreshKey(prev => prev + 1);
   };
+
+  const filteredOrders = orders.filter(o => 
+     o.customer.toLowerCase().includes(searchTerm.toLowerCase()) || 
+     o.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500" key={refreshKey}>
@@ -31,8 +63,8 @@ export function Comercial() {
         title="Comercial & PDV" 
         description="Gestão de vendas, controle de caixa e histórico de pedidos B2B/B2C." 
         action={
-          <Button onClick={() => setIsDrawerOpen(true)} className="gap-2 shadow-lg shadow-amber-500/20">
-            <Plus size={16} /> Nova Venda
+          <Button onClick={() => setIsDrawerOpen(true)} variant="primary" size="lg">
+            <ShoppingBag size={18} /> Nova Venda
           </Button>
         }
       />
@@ -43,10 +75,18 @@ export function Comercial() {
           <Input 
             icon={<Search size={18} className="text-zinc-500" />}
             placeholder="Buscar pedido, cliente ou código..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="gap-2 sm:w-auto w-full justify-center">
-          <Filter size={16} className="text-zinc-500" /> Filtros
+        <Button variant="outline" className="gap-2 sm:w-auto w-full justify-center" onClick={() => exportToCSV(filteredOrders, 'pedidos', [
+          { key: 'id', label: 'ID do Pedido' },
+          { key: 'createdAt', label: 'Data' },
+          { key: 'customer', label: 'Cliente' },
+          { key: 'total', label: 'Total (Centavos)' },
+          { key: 'status', label: 'Status' }
+        ])}>
+          <Download size={16} className="text-zinc-500" /> Exportar CSV
         </Button>
       </div>
 
@@ -63,14 +103,14 @@ export function Comercial() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/50">
-              {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-zinc-800/30 transition-colors group cursor-pointer">
+              {paginatedOrders.map((order) => (
+                <tr key={order.id} className="hover:bg-zinc-800/30 transition-colors group">
                   <td className="px-6 py-4">
                     <span className="font-mono text-zinc-100 group-hover:text-amber-500 transition-colors uppercase">{order.id.split('-').pop() || order.id}</span>
                   </td>
                   <td className="px-6 py-4">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
                   <td className="px-6 py-4 font-medium text-zinc-100">{order.customer}</td>
-                  <td className="px-6 py-4 text-emerald-500 font-medium text-right">R$ {order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  <td className="px-6 py-4 text-emerald-500 font-medium text-right">{formatBRL(order.total)}</td>
                   <td className="px-6 py-4 pl-8">
                     <StatusBadge 
                       status={order.status} 
@@ -80,7 +120,7 @@ export function Comercial() {
                 </tr>
               ))}
               
-              {orders.length === 0 && (
+              {filteredOrders.length === 0 && (
                 <tr>
                   <td colSpan={5} className="p-0 border-none">
                     <div className="py-16 flex items-center justify-center">
@@ -96,6 +136,15 @@ export function Comercial() {
             </tbody>
           </table>
         </div>
+        {filteredOrders.length > 0 && (
+           <Pagination 
+             currentPage={currentPage}
+             totalPages={totalPages}
+             onPageChange={setCurrentPage}
+             itemsPerPage={itemsPerPage}
+             totalItems={filteredOrders.length}
+           />
+        )}
       </Card>
 
       {isDrawerOpen && (

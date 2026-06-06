@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useRepositories } from '../../repositories/RepositoryProvider';
 import { PaymentIntentRecord, PaymentProviderConfigRecord } from '../../repositories/interfaces/IPaymentRepository';
 import { CreditCard, CheckCircle2, XCircle, RotateCcw, MonitorPlay, AlertTriangle } from 'lucide-react';
+import { useToast } from '../../components/ui/Toast';
 
 export function PaymentGatewayPanel() {
+  const { success, error: toastError, info } = useToast();
   const { paymentRepo } = useRepositories();
   const [activeTab, setActiveTab] = useState<'intents'|'config'|'webhooks'>('intents');
   const [intents, setIntents] = useState<PaymentIntentRecord[]>([]);
@@ -33,7 +35,7 @@ export function PaymentGatewayPanel() {
       await paymentRepo.markAsPaidManual(id);
       fetchData(); // refresh
     } catch(e) {
-      alert("Erro ao marcar como pago");
+      toastError("Erro ao marcar como pago");
     }
   };
 
@@ -42,7 +44,7 @@ export function PaymentGatewayPanel() {
       await paymentRepo.cancelIntent(id);
       fetchData();
     } catch(e) {
-      alert("Erro ao cancelar intention");
+      toastError("Erro ao cancelar intention");
     }
   };
 

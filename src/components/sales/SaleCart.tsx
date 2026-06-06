@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { Trash2, Minus, Plus } from 'lucide-react';
 import { OrderItem } from '../../domain/types';
 
@@ -26,7 +27,7 @@ export function SaleCart({ items, onUpdateQty, onRemoveItem }: SaleCartProps) {
         <li key={item.productId} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-zinc-950 border border-zinc-800/80 hover:border-amber-500/30 transition-colors rounded-xl group animate-in slide-in-from-left-2 duration-300">
           <div className="flex-1">
             <div className="font-medium text-sm text-zinc-100 group-hover:text-amber-500 transition-colors">{item.name}</div>
-            <div className="text-xs font-mono text-zinc-500 mt-1">R$ {item.unitPrice.toFixed(2)} cada</div>
+            <div className="text-xs font-mono text-zinc-500 mt-1">{formatBRL(item.unitPrice)} cada</div>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto">
             <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-1">
@@ -51,7 +52,7 @@ export function SaleCart({ items, onUpdateQty, onRemoveItem }: SaleCartProps) {
             
             <div className="flex items-center gap-5">
               <div className="text-sm font-semibold font-mono text-zinc-100 w-24 text-right">
-                R$ {(item.qty * item.unitPrice).toFixed(2)}
+                {formatBRL((item.qty * item.unitPrice))}
               </div>
               <button 
                 onClick={() => onRemoveItem(item.productId)}

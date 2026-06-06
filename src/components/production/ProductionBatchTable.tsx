@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { ProductionBatch } from '../../domain/types';
 import { Ban, Settings2, ArrowDownToLine, ArrowUpToLine, FileText } from 'lucide-react';
 
@@ -41,7 +42,7 @@ export function ProductionBatchTable({ batches, onOpenDetail, onFinalize }: Prod
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="text-emerald-400 font-medium">
-                    {b.unitCost > 0 ? `R$ ${b.unitCost.toFixed(2)}` : '-'}
+                    {b.unitCost > 0 ? `${formatBRL(b.unitCost)}` : '-'}
                   </div>
                 </td>
                 <td className="px-6 py-4">

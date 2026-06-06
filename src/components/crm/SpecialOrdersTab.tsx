@@ -1,3 +1,4 @@
+import { formatBRL } from '../../lib/format';
 import { useState, useEffect } from 'react';
 import { useRepositories } from '../../repositories/RepositoryProvider';
 
@@ -65,7 +66,7 @@ export function SpecialOrdersTab() {
              <div className="text-sm text-zinc-400 mb-4">{order.guestCount} Convidados • Sabor: {order.flavor || 'N/A'}</div>
              <div className="flex justify-between text-xs text-zinc-500">
                 <span>Data: {order.eventDate ? new Date(order.eventDate).toLocaleDateString() : 'N/A'}</span>
-                {order.totalAmount && <span>R$ {order.totalAmount}</span>}
+                {order.totalAmount && <span>{formatBRL(order.totalAmount)}</span>}
              </div>
           </div>
         ))}

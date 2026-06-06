@@ -6,11 +6,15 @@ import { TeamMember, Role, Permission, Invitation, AuditLog } from '../repositor
 import { Users, UserPlus, Shield, Activity, Fingerprint, Search, Edit2, Lock, ListFilter, MapPin, Mail, Loader2, Ban, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { useConfirm } from '../components/ui/ConfirmDialog';
+import { useToast } from '../components/ui/Toast';
 
 type Tab = 'members' | 'invitations' | 'roles' | 'permissions' | 'audit';
 
 export function Equipe() {
   const { teamRepo, actualType } = useRepositories();
+  const confirm = useConfirm();
+  const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('members');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -49,14 +53,22 @@ export function Equipe() {
   const handleStatusChange = async (member: TeamMember) => {
     try {
       if (member.status === 'active') {
-        if (!confirm('Deseja realmente suspender este usuário?')) return;
+        const proceed = await confirm({
+          title: 'Suspender Usuário',
+          description: 'Deseja realmente suspender este usuário? Ele perderá o acesso ao sistema.',
+          confirmText: 'Sim, Suspender',
+          type: 'danger'
+        });
+        if (!proceed) return;
         await teamRepo.suspendMember(member.id);
+        success('Usuário suspenso com sucesso.');
       } else {
         await teamRepo.reactivateMember(member.id);
+        success('Usuário reativado com sucesso.');
       }
       fetchData();
     } catch (e: any) {
-      alert(e.message || 'Erro ao alterar status');
+      error(e.message || 'Erro ao alterar status');
     }
   };
 

@@ -1,11 +1,14 @@
+import { formatBRL } from '../lib/format';
 import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { DigitalMenuCategory, DigitalMenuConfig, DigitalMenuOrderPayload } from '../domain/digitalMenu';
 import { Store, ShoppingBag, ArrowLeft, Clock, MapPin, Check, QrCode, Coffee, X } from 'lucide-react';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { useToast } from '../components/ui/Toast';
 
 export function PublicMenu({ slug }: { slug: string }) {
+  const { success, error: toastError, info } = useToast();
   const { digitalMenuRepo } = useRepositories();
   const [config, setConfig] = useState<DigitalMenuConfig | null>(null);
   const [categories, setCategories] = useState<DigitalMenuCategory[]>([]);
@@ -115,7 +118,7 @@ export function PublicMenu({ slug }: { slug: string }) {
           for (const group of selectedItem.modifierGroups) {
               const selected = itemModifiers[group.id] || [];
               if (selected.length < group.minSelections) {
-                  alert(`Selecione no mínimo ${group.minSelections} em "${group.name}".`);
+                  toastError(`Selecione no mínimo ${group.minSelections} em "${group.name}".`);
                   return;
               }
           }
@@ -159,7 +162,7 @@ export function PublicMenu({ slug }: { slug: string }) {
 
   const placeOrder = async () => {
     if (!customerName.trim()) {
-      alert('Informe seu nome para continuar.');
+      toastError('Informe seu nome para continuar.');
       return;
     }
     setLoading(true);
@@ -196,7 +199,7 @@ export function PublicMenu({ slug }: { slug: string }) {
       setCheckoutStep('success');
       setCart([]);
     } catch(e) {
-      alert('Erro ao criar pedido.');
+      toastError('Erro ao criar pedido.');
     } finally {
       setLoading(false);
     }
@@ -309,7 +312,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                           <h3 className="font-medium text-zinc-100 mb-1 leading-snug">{item.name}</h3>
                           {item.description && <p className="text-xs text-zinc-500 mb-3 line-clamp-2 leading-relaxed">{item.description}</p>}
                           <div className="mt-auto flex items-center justify-between">
-                            <span className="font-mono font-medium text-[#C59868]">R$ {item.price.toFixed(2)}</span>
+                            <span className="font-mono font-medium text-[#C59868]">{formatBRL(item.price)}</span>
                             {config.isOpen || config.allowOrdersOutsideHours ? (
                               <button 
                                 onClick={() => openItemModal(item)}
@@ -356,7 +359,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                           </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-sm font-mono text-[#C59868] font-medium">R$ {((c.price + (c.optionsTotal||0)) * c.qty).toFixed(2)}</span>
+                          <span className="text-sm font-mono text-[#C59868] font-medium">{formatBRL(((c.price + (c.optionsTotal||0)) * c.qty))}</span>
                           <button onClick={() => removeFromCart(c.uid)} className="text-[10px] text-[#AF4D4D] uppercase font-bold tracking-wider hover:opacity-80">Remover</button>
                         </div>
                       </div>
@@ -364,7 +367,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                   ))}
                   <div className="p-4 bg-zinc-950/50 flex justify-between items-center font-medium">
                     <span className="text-zinc-400 text-sm">Subtotal</span>
-                    <span className="font-mono text-zinc-100">R$ {cartTotal.toFixed(2)}</span>
+                    <span className="font-mono text-zinc-100">{formatBRL(cartTotal)}</span>
                   </div>
                 </div>
             )}
@@ -435,7 +438,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                              try {
                                  const zones = JSON.parse(config.deliveryZonesJson);
                                  return zones.filter((z:any)=>z.active).map((z:any) => (
-                                     <option key={z.name} value={z.name}>{z.name} - R$ {z.fee.toFixed(2)}</option>
+                                     <option key={z.name} value={z.name}>{z.name} - {formatBRL(z.fee)}</option>
                                  ));
                              } catch(e) { return null; }
                          })()}
@@ -450,17 +453,17 @@ export function PublicMenu({ slug }: { slug: string }) {
             <div className="space-y-4 border-t border-zinc-900 py-6">
               <div className="flex justify-between text-sm">
                 <span className="text-zinc-500 font-medium">Subtotal</span>
-                <span className="text-zinc-100">R$ {cartTotal.toFixed(2)}</span>
+                <span className="text-zinc-100">{formatBRL(cartTotal)}</span>
               </div>
               {deliveryMethod === 'delivery' && currentDeliveryFee > 0 && (
                  <div className="flex justify-between text-sm">
                    <span className="text-zinc-500 font-medium">Taxa de Entrega</span>
-                   <span className="text-zinc-100">R$ {(currentDeliveryFee).toFixed(2)}</span>
+                   <span className="text-zinc-100">{formatBRL((currentDeliveryFee))}</span>
                  </div>
               )}
               <div className="flex justify-between items-center pt-4 mt-2 border-t border-zinc-900">
                 <span className="text-lg font-medium text-zinc-100">Total</span>
-                <span className="text-xl text-[#C59868] font-mono font-bold">R$ {finalTotal.toFixed(2)}</span>
+                <span className="text-xl text-[#C59868] font-mono font-bold">{formatBRL(finalTotal)}</span>
               </div>
             </div>
 
@@ -499,7 +502,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                 <Button 
                   onClick={() => {
                     navigator.clipboard.writeText(orderSummary.qrcode!);
-                    alert("Chave Copiada!");
+                    toastError("Chave Copiada!");
                   }}
                   className="w-full"
                 >
@@ -536,7 +539,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                <span className="font-bold uppercase tracking-wider text-xs">Ver Carrinho</span>
              </div>
              <span className="font-mono font-bold tracking-tight text-base">
-               R$ {cartTotal.toFixed(2)}
+               {formatBRL(cartTotal)}
              </span>
            </button>
          </div>
@@ -561,7 +564,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                  {selectedItem.description && (
                      <p className="text-zinc-500 text-sm mt-3 leading-relaxed">{selectedItem.description}</p>
                  )}
-                 <div className="font-mono text-xl text-[#C59868] font-bold mt-4">R$ {selectedItem.price.toFixed(2)}</div>
+                 <div className="font-mono text-xl text-[#C59868] font-bold mt-4">{formatBRL(selectedItem.price)}</div>
              </div>
 
              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-8 custom-scrollbar">
@@ -585,7 +588,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                                              <input type="checkbox" className="hidden" checked={isSelected} onChange={() => toggleModifier(group, opt)} />
                                              <span className={`text-sm ${isSelected ? 'text-zinc-100 font-medium' : 'text-zinc-400'}`}>{opt.name}</span>
                                          </div>
-                                         {opt.price > 0 && <span className={`text-xs font-mono font-medium ${isSelected ? 'text-[#C59868]' : 'text-zinc-500'}`}>+R$ {opt.price.toFixed(2)}</span>}
+                                         {opt.price > 0 && <span className={`text-xs font-mono font-medium ${isSelected ? 'text-[#C59868]' : 'text-zinc-500'}`}>+{formatBRL(opt.price)}</span>}
                                      </label>
                                  );
                              })}
@@ -611,7 +614,7 @@ export function PublicMenu({ slug }: { slug: string }) {
                  >
                      <span>Adicionar ao Pedido</span>
                      <span className="font-mono bg-[#100C08]/10 px-3 py-1 rounded text-sm">
-                         R$ {(selectedItem.price + (Object.values(itemModifiers).flat() as any[]).reduce((sum:number, o:any) => sum + (o.price || 0), 0)).toFixed(2)}
+                         {formatBRL((selectedItem.price + (Object.values(itemModifiers).flat() as any[]).reduce((sum:number, o:any) => sum + (o.price || 0), 0)))}
                      </span>
                  </Button>
              </div>

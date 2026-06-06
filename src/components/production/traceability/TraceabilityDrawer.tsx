@@ -5,6 +5,7 @@ import { PublicLotTrace } from '../../../domain/types';
 
 import QRCode from 'react-qr-code';
 import { PrintLabel } from './PrintLabel';
+import { useToast } from '../../../components/ui/Toast';
 
 interface TraceabilityDrawerProps {
   traceId?: string;
@@ -13,6 +14,7 @@ interface TraceabilityDrawerProps {
 }
 
 export function TraceabilityDrawer({ traceId, onClose, onSuccess }: TraceabilityDrawerProps) {
+  const { success, error: toastError, info } = useToast();
   const { traceabilityRepo, qualityRepo } = useRepositories();
   const [loading, setLoading] = useState(false);
   const [trace, setTrace] = useState<PublicLotTrace | null>(null);
@@ -43,7 +45,7 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
       }
     } catch (e) {
       console.error(e);
-      alert('Erro ao carregar rastreio');
+      toastError('Erro ao carregar rastreio');
     }
   };
 
@@ -79,7 +81,7 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
       }
       onSuccess();
     } catch (e: any) {
-      alert(e.message || 'Erro ao salvar');
+      toastError(e.message || 'Erro ao salvar');
     } finally {
       setLoading(false);
     }
@@ -92,7 +94,7 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
       await traceabilityRepo.publish(trace.id);
       onSuccess();
     } catch (e) {
-      alert('Erro ao publicar');
+      toastError('Erro ao publicar');
       setLoading(false);
     }
   };
@@ -104,7 +106,7 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
       await traceabilityRepo.unpublish(trace.id);
       onSuccess();
     } catch (e) {
-      alert('Erro ao despublicar');
+      toastError('Erro ao despublicar');
       setLoading(false);
     }
   };

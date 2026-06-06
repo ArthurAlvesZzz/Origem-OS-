@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Send, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { CommunicationQueueRecord } from '../../repositories/interfaces/ICrmRepository';
 import { ICrmRepository } from '../../repositories/interfaces/ICrmRepository';
+import { useToast } from '../../components/ui/Toast';
 
 interface CrmQueueTabProps {
     crmRepo: ICrmRepository;
 }
 
 export function CrmQueueTab({ crmRepo }: CrmQueueTabProps) {
+  const { success, error: toastError, info } = useToast();
     const [queues, setQueues] = useState<CommunicationQueueRecord[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -21,11 +23,11 @@ export function CrmQueueTab({ crmRepo }: CrmQueueTabProps) {
     const handleSimulateSend = async (id: string, recipient: string, body: string) => {
         try {
             await crmRepo.markCommunicationSimulated(id);
-            alert(`Mensagem simulada enviada com sucesso no sistema.\nNa vida real, usaria a API do provider.\nSe quiser abrir o WhatsApp agora, acesse: https://wa.me/${recipient.replace(/\D/g, '')}?text=${encodeURIComponent(body)}`);
+            success(`Mensagem simulada enviada com sucesso no sistema.\nNa vida real, usaria a API do provider.\nSe quiser abrir o WhatsApp agora, acesse: https://wa.me/${recipient.replace(/\D/g, '')}?text=${encodeURIComponent(body)}`);
             const q = await crmRepo.getCommunications();
             setQueues(q);
         } catch(e) {
-            alert("Erro ao simular");
+            toastError("Erro ao simular");
         }
     };
 

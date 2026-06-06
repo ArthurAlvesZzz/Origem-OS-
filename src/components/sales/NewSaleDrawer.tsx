@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Check, ShoppingBag, CreditCard } from 'lucide-react';
+import { ShoppingBag, CreditCard, Check } from 'lucide-react';
 import { ProductSearch } from './ProductSearch';
 import { SaleCart } from './SaleCart';
 import { PaymentSelector } from './PaymentSelector';
@@ -8,6 +8,10 @@ import { Product, OrderItem, OrderStatus } from '../../domain/types';
 import { calculateOrderTotals } from '../../domain/orders';
 import { useRepositories } from '../../repositories/RepositoryProvider';
 import { Button } from '../ui/Button';
+import { Drawer } from '../ui/Drawer';
+import { motion, AnimatePresence } from 'motion/react';
+import { useConfirm } from '../ui/ConfirmDialog';
+import { useToast } from '../ui/Toast';
 
 interface NewSaleDrawerProps {
   onClose: () => void;
@@ -21,9 +25,13 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
   const [status, setStatus] = useState<OrderStatus>('Pago');
   const [channel, setChannel] = useState<string>('Whatsapp');
   const [dueDate, setDueDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   
   const { orderRepo, inventoryRepo, financialRepo, customerRepo, settingsRepo } = useRepositories();
   const [customers, setCustomers] = useState<{id: string, name: string}[]>([]);
+  const confirm = useConfirm();
+  const { error, success } = useToast();
 
   useEffect(() => {
     customerRepo.getCustomers().then(all => {
@@ -84,85 +92,128 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
     }
 
     if (stockWarnings.length > 0) {
-      const proceed = window.confirm(`${stockWarnings.join('\n')}\n\nDeseja continuar mesmo assim? O estoque ficará negativo.`);
+      const proceed = await confirm({
+        title: 'Aviso de Estoque Negativo',
+        description: `${stockWarnings.join('\n')}\n\nDeseja continuar mesmo assim? O estoque ficará negativo.`,
+        confirmText: 'Continuar Venda'
+      });
       if (!proceed) return;
     }
 
-    const customer = customers.find(c => c.id === customerId);
-    const { subtotal, totalDiscount, total } = calculateOrderTotals(items);
-    
-    // Core Domain Call via Repositories
-    const newOrder = await orderRepo.createOrder({
-      customerId: customer?.id,
-      customerName: customer?.name || 'Consumidor Final',
-      items,
-      subtotal,
-      discount: totalDiscount,
-      total,
-      paymentMethod: method,
-      status
-    });
+    setIsFinalizing(true);
 
-    // Apply Stock
-    for (const item of items) {
-      await inventoryRepo.createStockExit(item.productId, item.name, item.qty, `Venda ${newOrder.id}`);
-    }
-
-    // Apply Finance
-    if (status === 'Pago') {
-      await financialRepo.createTransaction({
-        description: `Venda ${newOrder.id}`,
-        amount: total,
-        date: new Date().toISOString(),
-        status: 'Efetivado',
-        type: 'Receita',
-        category: 'Vendas',
-        paymentMethod: method
-      }); // Note: for receipts we should use a revenue type! Wait!
-    } else if (status === 'Pendente' || status === 'Parcial') {
-      await financialRepo.createTransaction({
-        description: `Recebimento ref ${newOrder.id}`,
-        amount: total,
-        date: new Date(dueDate).toISOString(),
-        status: 'Agendado',
-        type: 'Receita',
-        category: 'Vendas',
-        paymentMethod: method
+    try {
+      const customer = customers.find(c => c.id === customerId);
+      const { subtotal, totalDiscount, total } = calculateOrderTotals(items);
+      
+      const newOrder = await orderRepo.createOrder({
+        customerId: customer?.id,
+        customerName: customer?.name || 'Consumidor Final',
+        items,
+        subtotal,
+        discount: totalDiscount,
+        total,
+        paymentMethod: method,
+        status
       });
+
+      for (const item of items) {
+        await inventoryRepo.createStockExit(item.productId, item.name, item.qty, `Venda ${newOrder.id}`);
+      }
+
+      if (status === 'Pago') {
+        await financialRepo.createTransaction({
+          description: `Venda ${newOrder.id}`,
+          amount: total,
+          date: new Date().toISOString(),
+          status: 'Efetivado',
+          type: 'Receita',
+          category: 'Vendas',
+          paymentMethod: method
+        });
+      } else if (status === 'Pendente' || status === 'Parcial') {
+        await financialRepo.createTransaction({
+          description: `Recebimento ref ${newOrder.id}`,
+          amount: total,
+          date: new Date(dueDate).toISOString(),
+          status: 'Agendado',
+          type: 'Receita',
+          category: 'Vendas',
+          paymentMethod: method
+        });
+      }
+      
+      setIsSuccess(true);
+      // Removed auto-close
+    } catch (e: any) {
+      console.error(e);
+      toastError(e.message || 'Erro ao finalizar venda.');
+      setIsFinalizing(false);
     }
-    
-    alert('Venda finalizada com sucesso!');
-    onComplete();
   };
 
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity animate-in fade-in duration-300" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-full md:w-[600px] bg-zinc-950 border-l border-zinc-800 shadow-2xl z-[101] flex flex-col transform transition-transform duration-300 animate-in slide-in-from-right">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-10">
-          <div>
-            <h2 className="text-xl font-heading font-medium text-zinc-50 tracking-tight flex items-center gap-2">
-              <ShoppingBag size={20} className="text-amber-500" /> Nova Venda (PDV)
-            </h2>
-            <p className="text-sm text-zinc-400 mt-1">Lançamento de pedido manual e baixa de estoque contínua.</p>
-          </div>
-          <button onClick={onClose} className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-full transition-colors">
-            <X size={20} />
-          </button>
-        </div>
+  const handlePrint = () => {
+    window.print();
+  };
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-          
+  const resetSale = () => {
+    setItems([]);
+    setCustomerId('');
+    setMethod('PIX');
+    setStatus('Pago');
+    setIsSuccess(false);
+    setIsFinalizing(false);
+  };
+
+  const { subtotal, totalDiscount, total } = calculateOrderTotals(items);
+
+  return (
+    <Drawer
+      isOpen={true}
+      onClose={onClose}
+      title="Nova Venda (PDV)"
+      subtitle="Lançamento de pedido manual e baixa de estoque."
+      icon={<ShoppingBag size={20} />}
+      size="lg"
+      footer={
+        !isSuccess ? (
+          <div>
+            <SaleSummary items={items} />
+            <div className="mt-5">
+              <Button 
+                variant="conclusive"
+                size="lg"
+                onClick={handleFinalize}
+                disabled={items.length === 0}
+                isLoading={isFinalizing}
+                className="w-full justify-center gap-2"
+              >
+                {!isFinalizing && <Check size={20} />}
+                Confirmar e Receber
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+             <Button variant="outline" size="lg" className="flex-1" onClick={handlePrint}>
+                Imprimir Recibo
+             </Button>
+             <Button variant="primary" size="lg" className="flex-1 gap-2" onClick={resetSale}>
+                <Plus size={18} /> Nova Venda
+             </Button>
+          </div>
+        )
+      }
+    >
+      {!isSuccess ? (
+        <div className="space-y-6">
           {/* Customer Selection */}
-          <section className="bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Identificação do Cliente</label>
+          <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
+            <label className="block text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">Identificação do Cliente</label>
             <select 
               value={customerId}
               onChange={e => setCustomerId(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors appearance-none"
+              className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-colors appearance-none cursor-pointer"
             >
               <option value="">👤 Cliente Balcão (Consumidor Final)</option>
               {customers.map(c => (
@@ -172,65 +223,80 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
           </section>
 
           {/* Add Product */}
-          <section className="bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Pesquisa de Produtos</label>
+          <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
+            <label className="block text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">Buscar Produtos (SKU ou Nome)</label>
             <ProductSearch onSelectProduct={handleSelectProduct} />
           </section>
 
           {/* Cart */}
-          <section className="bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
+          <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-800/50">
               <label className="block text-sm font-semibold text-zinc-100">Itens do Pedido</label>
-              <span className="text-[11px] font-mono font-medium bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded uppercase tracking-wider">{items.length} itens</span>
+              <span className="text-[11px] font-mono font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded uppercase tracking-wider">{items.length} itens</span>
             </div>
-            <SaleCart items={items} onUpdateQty={handleUpdateQty} onRemoveItem={handleRemoveItem} />
+            <div className="min-h-[100px]">
+              {items.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 text-zinc-500 border border-dashed border-zinc-800 rounded-xl">
+                  <ShoppingBag size={32} className="mb-3 opacity-20" />
+                  <p className="text-sm">Carrinho vazio</p>
+                </div>
+              ) : (
+                <SaleCart items={items} onUpdateQty={handleUpdateQty} onRemoveItem={handleRemoveItem} />
+              )}
+            </div>
           </section>
 
           {/* Payment */}
-          {items.length > 0 && (
-            <section className="bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 shadow-sm space-y-5">
-              <div className="flex items-center gap-2 mb-2 pb-3 border-b border-zinc-800/50">
-                <CreditCard size={18} className="text-emerald-500" />
-                <label className="block text-sm font-semibold text-zinc-100">Condições de Pagamento</label>
-              </div>
-              <PaymentSelector 
-                method={method} 
-                status={status} 
-                onChangeMethod={setMethod} 
-                onChangeStatus={setStatus} 
-              />
-              {status === 'Pendente' && (
-                <div className="pt-4 border-t border-zinc-800/50">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Data de Vencimento Previsão</label>
-                  <input 
-                    type="date"
-                    value={dueDate}
-                    onChange={e => setDueDate(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors" 
-                  />
+          <AnimatePresence>
+            {items.length > 0 && (
+              <motion.section 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 shadow-sm space-y-5 overflow-hidden"
+              >
+                <div className="flex items-center gap-2 mb-2 pb-3 border-b border-zinc-800/50">
+                  <CreditCard size={18} className="text-amber-500" />
+                  <label className="block text-sm font-semibold text-zinc-100">Condições de Pagamento</label>
                 </div>
-              )}
-            </section>
-          )}
-
+                <PaymentSelector 
+                  method={method} 
+                  status={status} 
+                  onChangeMethod={setMethod} 
+                  onChangeStatus={setStatus} 
+                />
+                {status === 'Pendente' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4 border-t border-zinc-800/50">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Data de Vencimento Previsão</label>
+                    <input 
+                      type="date"
+                      value={dueDate}
+                      onChange={e => setDueDate(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors" 
+                    />
+                  </motion.div>
+                )}
+              </motion.section>
+            )}
+          </AnimatePresence>
         </div>
-
-        {/* Footer Summary & Action */}
-        <div className="border-t border-zinc-800/50 bg-zinc-900/80 backdrop-blur-md p-6 sticky bottom-0">
-          <SaleSummary items={items} />
-          <div className="mt-5">
-            <Button 
-              onClick={handleFinalize}
-              disabled={items.length === 0}
-              className="w-full justify-center gap-2 py-6 text-sm bg-amber-500 hover:bg-amber-400 text-amber-950"
-            >
-              <Check size={20} />
-              Concluir Transação PDV
-            </Button>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex-1 flex flex-col items-center justify-center p-8 text-center"
+        >
+          <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mb-6 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
+              <Check size={48} strokeWidth={1.5} />
+            </motion.div>
           </div>
-        </div>
-
-      </div>
-    </>
+          <h3 className="text-2xl font-heading font-semibold text-zinc-100 mb-2">Venda Registrada</h3>
+          <p className="text-zinc-400 max-w-sm">
+            Estoque atualizado e lançamento financeiro gerado com sucesso.
+          </p>
+        </motion.div>
+      )}
+    </Drawer>
   );
 }

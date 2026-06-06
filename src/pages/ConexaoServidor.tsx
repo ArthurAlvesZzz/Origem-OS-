@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Server, Activity, Shield, Trash2, Database, Wifi, Loader2, Globe, Cpu, AlertTriangle } from 'lucide-react';
 import { getApiBaseUrl, setApiBaseUrl, clearApiBaseUrl, safeFetch } from '../repositories/api/apiClient';
 import { useRepositories } from '../repositories/RepositoryProvider';
+import { useConfirm } from '../components/ui/ConfirmDialog';
 
 export function ConexaoServidor() {
   const { actualType } = useRepositories();
+  const confirm = useConfirm();
   const [dataMode, setDataMode] = useState<'mock' | 'api'>(
     (localStorage.getItem('DATA_MODE') as any) || 'mock'
   );
@@ -18,7 +20,7 @@ export function ConexaoServidor() {
     uptime?: number;
   }>({ status: null, message: '' });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let finalUrl = baseUrl.trim();
     if (finalUrl.endsWith('/')) {
        finalUrl = finalUrl.slice(0, -1);
@@ -35,7 +37,12 @@ export function ConexaoServidor() {
     }
 
     if (token) {
-        if (confirm("Ao alterar a conexão com o servidor, é necessário fazer login novamente. Deseja continuar?")) {
+        const proceed = await confirm({
+          title: 'Reiniciar Aplicação',
+          description: "Ao alterar a conexão com o servidor, é necessário fazer login novamente. Deseja continuar?",
+          confirmText: 'Sim, Reiniciar'
+        });
+        if (proceed) {
             localStorage.removeItem('gestaoos_token');
             window.location.reload();
         }
@@ -282,9 +289,9 @@ export function ConexaoServidor() {
                     Quando conectado a um servidor remoto, os dados deixam de ficar armazenados apenas na memória deste dispositivo
                     (modo Demo) e passam a ser lidos de um banco de dados real em PostgreeSQL, criptografado e servido via API.
                 </p>
-                <a href="https://github.com/ArthurAlvesZzz/GestaoArthur01/blob/main/SELF_HOSTED.md" target="_blank" className="text-xs text-amber-500 hover:text-amber-400 transition-colors">
-                    Leia a documentação Oficial &rarr;
-                </a>
+                <p className="text-xs text-amber-500 hover:text-amber-400 transition-colors cursor-help">
+                    Consulte a documentação Oficial &rarr;
+                </p>
             </div>
         </div>
 

@@ -3,8 +3,10 @@ import { Coffee, MapPin, Activity, CheckCircle2, Award, ChevronRight, QrCode } f
 import { PublicLotTrace } from '../domain/types';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { Button } from '../components/ui/Button';
+import { useToast } from '../components/ui/Toast';
 
 export function RastreabilidadePublica() {
+  const { success, error: toastError, info } = useToast();
   const publicCode = window.location.pathname.split('/').pop() || '';
   const [loading, setLoading] = useState(true);
   const [trace, setTrace] = useState<PublicLotTrace | null>(null);
@@ -190,7 +192,7 @@ export function RastreabilidadePublica() {
                className="w-full mt-2 font-mono text-xs uppercase tracking-widest"
                onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  alert('Link copiado!');
+                  toastError('Link copiado!');
                }}
             >
                Copiar Link do Lote

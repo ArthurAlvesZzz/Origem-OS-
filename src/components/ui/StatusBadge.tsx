@@ -16,8 +16,17 @@ export function StatusBadge({ status, variant = 'default', className }: StatusBa
     default: 'bg-zinc-800 text-zinc-300 border-zinc-700',
   };
 
+  const dots = {
+    success: 'bg-emerald-400',
+    warning: 'bg-amber-400',
+    error: 'bg-red-400',
+    info: 'bg-blue-400',
+    default: 'bg-zinc-400',
+  };
+
   return (
-    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border", variants[variant], className)}>
+    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border", variants[variant], className)}>
+      <span className={cn("w-1.5 h-1.5 rounded-full", dots[variant])} />
       {status}
     </span>
   );
