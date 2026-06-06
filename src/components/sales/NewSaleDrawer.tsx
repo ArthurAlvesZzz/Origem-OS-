@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, ShoppingBag, CreditCard } from 'lucide-react';
 import { ProductSearch } from './ProductSearch';
 import { SaleCart } from './SaleCart';
 import { PaymentSelector } from './PaymentSelector';
@@ -7,6 +7,7 @@ import { SaleSummary } from './SaleSummary';
 import { Product, OrderItem, OrderStatus } from '../../domain/types';
 import { calculateOrderTotals } from '../../domain/orders';
 import { useRepositories } from '../../repositories/RepositoryProvider';
+import { Button } from '../ui/Button';
 
 interface NewSaleDrawerProps {
   onClose: () => void;
@@ -136,29 +137,34 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-full md:w-[600px] bg-zinc-950 border-l border-zinc-900 shadow-2xl z-50 flex flex-col transform transition-transform duration-300">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity animate-in fade-in duration-300" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 w-full md:w-[600px] bg-zinc-950 border-l border-zinc-800 shadow-2xl z-[101] flex flex-col transform transition-transform duration-300 animate-in slide-in-from-right">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-900 bg-zinc-950">
-          <h2 className="text-lg font-heading font-semibold text-zinc-50 tracking-tight">Nova Venda (PDV)</h2>
-          <button onClick={onClose} className="p-2 text-zinc-500 hover:text-zinc-300 rounded-lg transition-colors">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-10">
+          <div>
+            <h2 className="text-xl font-heading font-medium text-zinc-50 tracking-tight flex items-center gap-2">
+              <ShoppingBag size={20} className="text-amber-500" /> Nova Venda (PDV)
+            </h2>
+            <p className="text-sm text-zinc-400 mt-1">Lançamento de pedido manual e baixa de estoque contínua.</p>
+          </div>
+          <button onClick={onClose} className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 rounded-full transition-colors">
             <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
           
           {/* Customer Selection */}
-          <section>
-            <label className="block text-sm font-medium text-zinc-400 mb-2">Cliente</label>
+          <section className="bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Identificação do Cliente</label>
             <select 
               value={customerId}
               onChange={e => setCustomerId(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+              className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors appearance-none"
             >
-              <option value="">Consumidor Final</option>
+              <option value="">👤 Cliente Balcão (Consumidor Final)</option>
               {customers.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -166,23 +172,27 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
           </section>
 
           {/* Add Product */}
-          <section className="pt-2">
-            <label className="block text-sm font-medium text-zinc-400 mb-2">Buscar Produto</label>
+          <section className="bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Pesquisa de Produtos</label>
             <ProductSearch onSelectProduct={handleSelectProduct} />
           </section>
 
           {/* Cart */}
-          <section className="pt-2">
-            <div className="flex items-center justify-between mb-3">
-              <label className="block text-sm font-medium text-zinc-400">Carrinho</label>
-              <span className="text-xs text-zinc-500">{items.length} itens</span>
+          <section className="bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-800/50">
+              <label className="block text-sm font-semibold text-zinc-100">Itens do Pedido</label>
+              <span className="text-[11px] font-mono font-medium bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded uppercase tracking-wider">{items.length} itens</span>
             </div>
             <SaleCart items={items} onUpdateQty={handleUpdateQty} onRemoveItem={handleRemoveItem} />
           </section>
 
           {/* Payment */}
           {items.length > 0 && (
-            <section className="pt-2 space-y-4">
+            <section className="bg-zinc-900 border border-zinc-800/50 rounded-2xl p-5 shadow-sm space-y-5">
+              <div className="flex items-center gap-2 mb-2 pb-3 border-b border-zinc-800/50">
+                <CreditCard size={18} className="text-emerald-500" />
+                <label className="block text-sm font-semibold text-zinc-100">Condições de Pagamento</label>
+              </div>
               <PaymentSelector 
                 method={method} 
                 status={status} 
@@ -190,13 +200,13 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
                 onChangeStatus={setStatus} 
               />
               {status === 'Pendente' && (
-                <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-2">Data de Vencimento</label>
+                <div className="pt-4 border-t border-zinc-800/50">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Data de Vencimento Previsão</label>
                   <input 
                     type="date"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700" 
+                    className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors" 
                   />
                 </div>
               )}
@@ -206,17 +216,17 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
         </div>
 
         {/* Footer Summary & Action */}
-        <div className="border-t border-zinc-900 bg-zinc-950 p-6">
+        <div className="border-t border-zinc-800/50 bg-zinc-900/80 backdrop-blur-md p-6 sticky bottom-0">
           <SaleSummary items={items} />
-          <div className="mt-4">
-            <button 
+          <div className="mt-5">
+            <Button 
               onClick={handleFinalize}
               disabled={items.length === 0}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-emerald-950 hover:bg-emerald-400 disabled:bg-zinc-800 disabled:text-zinc-600 font-semibold py-3.5 rounded-xl transition-colors"
+              className="w-full justify-center gap-2 py-6 text-sm bg-amber-500 hover:bg-amber-400 text-amber-950"
             >
               <Check size={20} />
-              Finalizar Venda
-            </button>
+              Concluir Transação PDV
+            </Button>
           </div>
         </div>
 

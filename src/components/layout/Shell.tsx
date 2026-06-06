@@ -105,14 +105,15 @@ export function Shell({ children, currentPage, onNavigate }: ShellProps) {
                     key={id}
                     onClick={() => onNavigate(id as Page)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 relative overflow-hidden group",
                       currentPage === id 
-                        ? "bg-zinc-800/80 text-zinc-100 font-medium shadow-sm border border-zinc-700/30" 
+                        ? "bg-zinc-800/80 text-zinc-100 font-semibold shadow-sm border border-zinc-700/30" 
                         : "text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-200"
                     )}
                   >
-                    <Icon size={16} className={cn("transition-colors", currentPage === id ? "text-amber-500" : "text-zinc-500")} />
-                    {label}
+                    {currentPage === id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] rounded-r flex-shrink-0" />}
+                    <Icon size={16} className={cn("transition-colors flex-shrink-0 z-10", currentPage === id ? "text-amber-500" : "text-zinc-500 group-hover:text-zinc-400")} />
+                    <span className="z-10">{label}</span>
                   </button>
                 ))}
               </div>
@@ -120,14 +121,18 @@ export function Shell({ children, currentPage, onNavigate }: ShellProps) {
           ))}
         </div>
         
-        <div className="p-4 border-t border-zinc-900">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-zinc-900/50 transition-colors cursor-pointer">
-            <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-xs font-bold text-indigo-400">
+        <div className="p-4 border-t border-zinc-900 flex flex-col gap-2">
+          <div className="flex items-center gap-2 px-2 py-1">
+             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+             <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">Mock Mode</span>
+          </div>
+          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-zinc-900/50 transition-colors cursor-pointer group">
+            <div className="w-8 h-8 rounded-full bg-[#100C08] border border-[#C59868]/30 flex items-center justify-center text-xs font-bold text-[#C59868] shadow-sm">
               CO
             </div>
             <div className="flex flex-col text-left">
               <span className="text-sm font-medium text-zinc-100 leading-tight">COFCOF.CO</span>
-              <span className="text-xs text-zinc-500">Plano Premium</span>
+              <span className="text-[10px] uppercase tracking-wider text-[#C59868] font-semibold">Premium</span>
             </div>
           </div>
         </div>

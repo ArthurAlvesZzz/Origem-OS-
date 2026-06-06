@@ -1,7 +1,10 @@
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { Search, Plus, ArrowDownToLine, ArrowUpToLine, Settings2 } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Input';
+import { Search, Plus, ArrowDownToLine, ArrowUpToLine, Settings2, PackageSearch } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { StockMovementDrawer } from '../components/inventory/StockMovementDrawer';
 import { StockMovementsTable } from '../components/inventory/StockMovementsTable';
@@ -41,75 +44,64 @@ export function Estoque() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto" key={refreshKey}>
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500" key={refreshKey}>
       <PageHeader 
-        title="Estoque" 
-        description="Controle de saldos físicos e inventário." 
+        title="Controle de Estoque" 
+        description="Gestão de saldos físicos, inventário e histórico de movimentações." 
         action={
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => handleOpenNew('Entrada')}
-              className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 text-zinc-50 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-700 hover:border-zinc-600 transition-all"
-            >
-              <ArrowDownToLine size={16} className="text-emerald-400" /> Entrada
-            </button>
-            <button 
-              onClick={() => handleOpenNew('Perda')}
-              className="flex items-center gap-2 bg-zinc-800 border border-zinc-700 text-zinc-50 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-700 hover:border-zinc-600 transition-all"
-            >
-              <ArrowUpToLine size={16} className="text-red-400" /> Perda
-            </button>
-            <button 
-              onClick={() => handleOpenNew('Ajuste')}
-              className="flex items-center gap-2 bg-zinc-50 text-zinc-950 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors"
-            >
-              <Settings2 size={16} /> Ajustar
-            </button>
+            <Button variant="outline" onClick={() => handleOpenNew('Entrada')} className="gap-2 border-zinc-700 bg-zinc-900">
+              <ArrowDownToLine size={16} className="text-emerald-500" /> <span className="hidden sm:inline">Entrada</span>
+            </Button>
+            <Button variant="outline" onClick={() => handleOpenNew('Perda')} className="gap-2 border-zinc-700 bg-zinc-900">
+              <ArrowUpToLine size={16} className="text-red-500" /> <span className="hidden sm:inline">Perda</span>
+            </Button>
+            <Button onClick={() => handleOpenNew('Ajuste')} className="gap-2 shadow-lg shadow-amber-500/20">
+              <Settings2 size={16} /> Ajuste Geral
+            </Button>
           </div>
         }
       />
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-          <input 
-            type="text" 
-            placeholder="Buscar item em estoque..." 
-            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+      <div className="flex flex-col md:flex-row gap-4 mb-6 relative z-10">
+        <div className="flex-1 max-w-xl">
+          <Input 
+            icon={<Search size={18} className="text-zinc-500" />}
+            placeholder="Buscar item ou SKU em estoque..."
           />
         </div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+      <Card className="mb-8 overflow-hidden">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-sm text-zinc-300">
             <thead className="text-xs uppercase bg-zinc-950/50 text-zinc-500 border-b border-zinc-800">
               <tr>
-                <th className="px-6 py-4 font-medium">Item</th>
+                <th className="px-6 py-4 font-medium">Item do Catálogo</th>
                 <th className="px-6 py-4 font-medium text-right">Saldo Atual</th>
                 <th className="px-6 py-4 font-medium text-right">Min. Seguro</th>
-                <th className="px-6 py-4 font-medium">Status do Estoque</th>
+                <th className="px-6 py-4 font-medium pl-8">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-zinc-800/50">
               {productsData.map((p) => {
                 const isLow = p.currentStock <= p.minStock;
                 return (
-                  <tr key={p.id} className="hover:bg-zinc-800/50 transition-colors">
+                  <tr key={p.id} className="hover:bg-zinc-800/30 transition-colors group">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-zinc-50">{p.name}</div>
-                      <div className="font-mono text-zinc-500 text-xs mt-0.5">{p.sku}</div>
+                      <div className="font-medium text-zinc-100 group-hover:text-amber-500 transition-colors">{p.name}</div>
+                      <div className="font-mono text-zinc-500 text-xs mt-1 uppercase tracking-wider">{p.sku}</div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="font-medium text-zinc-50">{p.currentStock}</span> <span className="text-zinc-500 text-xs">{p.unit}</span>
+                      <span className={`font-medium ${isLow ? 'text-red-400' : 'text-zinc-50'}`}>{p.currentStock}</span> <span className="text-zinc-500 text-xs ml-1">{p.unit}</span>
                     </td>
                     <td className="px-6 py-4 text-right text-zinc-500">
-                      {p.minStock} {p.unit}
+                      {p.minStock} <span className="text-xs ml-1">{p.unit}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 pl-8">
                       {p.active ? (
                         <StatusBadge 
-                          status={isLow ? 'Baixo Estoque' : 'Normal'} 
+                          status={isLow ? 'Estoque Baixo' : 'Estável'} 
                           variant={isLow ? 'error' : 'success'} 
                         />
                       ) : (
@@ -122,20 +114,25 @@ export function Estoque() {
               
               {productsData.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-0">
+                  <td colSpan={4} className="p-0 border-none">
+                    <div className="py-16 flex items-center justify-center">
                     <EmptyState
-                      icon={<Search size={24} />}
+                      icon={<PackageSearch size={32} className="text-zinc-600" />}
                       title="Nenhum produto rastreado"
-                      description="Adicione produtos no painel de Produtos para começar a rastrear o estoque."
+                      description="Adicione produtos no painel de Catálogo para começar a rastrear o estoque em tempo real."
                     />
+                    </div>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
+      <div className="mb-2">
+         <h3 className="text-lg font-heading font-semibold text-zinc-50">Últimas Movimentações</h3>
+      </div>
       <StockMovementsTable />
 
       {isDrawerOpen && (

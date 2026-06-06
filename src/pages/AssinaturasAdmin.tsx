@@ -263,7 +263,7 @@ export function AssinaturasAdmin() {
         description="Gestão de planos, aprovação de leads B2C e carteira de assinantes." 
       />
 
-      <div className="flex overflow-x-auto pb-2 border-b border-zinc-800 mb-6 gap-6 no-scrollbar">
+      <div className="flex bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-fit mb-6 shadow-sm overflow-x-auto custom-scrollbar">
         {tabs.map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -271,15 +271,12 @@ export function AssinaturasAdmin() {
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 pb-3 font-medium text-sm whitespace-nowrap transition-colors relative ${
-                isActive ? 'text-amber-500' : 'text-zinc-500 hover:text-zinc-300'
+              className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+                isActive ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
               }`}
             >
-              <Icon size={16} />
+              <Icon size={14} />
               {t.label}
-              {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-full shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-              )}
             </button>
           );
         })}

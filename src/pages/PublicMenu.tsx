@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { DigitalMenuCategory, DigitalMenuConfig, DigitalMenuOrderPayload } from '../domain/digitalMenu';
-import { Store, ShoppingBag, ArrowLeft, Clock, MapPin, Check, QrCode } from 'lucide-react';
+import { Store, ShoppingBag, ArrowLeft, Clock, MapPin, Check, QrCode, Coffee, X } from 'lucide-react';
+import { Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
 
 export function PublicMenu({ slug }: { slug: string }) {
   const { digitalMenuRepo } = useRepositories();
@@ -28,6 +30,9 @@ export function PublicMenu({ slug }: { slug: string }) {
   const [itemModifiers, setItemModifiers] = useState<Record<string, any[]>>({});
   const [itemNotes, setItemNotes] = useState(''); 
   
+  // Active Category state
+  const [activeCategoryId, setActiveCategoryId] = useState<string>('');
+
   const mapStatus = (st: string) => {
     switch (st) {
       case 'received': return 'Recebido';
@@ -45,6 +50,7 @@ export function PublicMenu({ slug }: { slug: string }) {
       if (res) {
         setConfig(res.config);
         setCategories(res.categories);
+        if (res.categories.length > 0) setActiveCategoryId(res.categories[0].id);
         setPaymentMethod(res.config.paymentProvider || 'manual_pix');
         
         if (res.config.deliveryZonesJson) {
@@ -215,18 +221,18 @@ export function PublicMenu({ slug }: { slug: string }) {
   }, [checkoutStep, orderSummary, slug, digitalMenuRepo]);
 
   if (loading && checkoutStep === 'menu') {
-    return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-amber-500">Montando cardápio...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-[#100C08] text-[#C59868] font-mono uppercase tracking-widest text-xs">Montando cardápio...</div>;
   }
 
   if (!config) {
-    return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-red-400">Cardápio não encontrado ou indisponível.</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-[#100C08] text-red-500 font-mono uppercase tracking-widest">Cardápio não encontrado.</div>;
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen bg-[#100C08] text-zinc-50 font-sans selection:bg-[#C59868]/30">
       
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-900/80 px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#100C08]/90 backdrop-blur-md border-b border-white/5 px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {checkoutStep !== 'menu' && checkoutStep !== 'success' && (
             <button onClick={() => setCheckoutStep(checkoutStep === 'checkout' ? 'cart' : 'menu')} className="p-2 -ml-2 text-zinc-400 hover:text-zinc-100">
@@ -236,7 +242,7 @@ export function PublicMenu({ slug }: { slug: string }) {
           <div>
             <h1 className="font-heading font-semibold text-lg text-zinc-50 tracking-tight leading-tight">{config.publicName}</h1>
             <div className="flex flex-wrap items-center gap-2 mt-0.5">
-              <span className={`flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-sm ${config.isOpen ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+              <span className={`flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-sm ${config.isOpen ? 'bg-[#528F65]/20 text-[#528F65]' : 'bg-[#AF4D4D]/20 text-[#AF4D4D]'}`}>
                 {config.isOpen ? 'Aberto' : 'Fechado'}
               </span>
               {config.estimatedPrepMinutes > 0 && (
@@ -251,43 +257,68 @@ export function PublicMenu({ slug }: { slug: string }) {
         {checkoutStep === 'menu' && (
            <button 
              onClick={() => setCart([])} 
-             className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-900 text-zinc-400 relative"
+             className="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 relative"
            >
-             <Store size={20} />
+             <Store size={18} />
            </button>
         )}
       </header>
 
       <main className="max-w-2xl mx-auto pb-32">
         {checkoutStep === 'menu' && (
-          <div className="p-4 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             {config.description && (
-              <p className="text-sm text-zinc-400 leading-relaxed border-l-2 border-amber-500/50 pl-3">
-                {config.description}
-              </p>
+              <div className="p-4 bg-zinc-900/50 border-b border-zinc-800">
+                 <p className="text-sm text-zinc-400 leading-relaxed max-w-prose">
+                   {config.description}
+                 </p>
+              </div>
             )}
 
-            <div className="space-y-8">
+            {/* Horizontal Categories Row */}
+            <div className="sticky top-[73px] z-30 bg-[#100C08]/90 backdrop-blur-md pt-4 pb-3 px-4 border-b border-zinc-800/80">
+               <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
+                 {categories.filter(c => c.items && c.items.length > 0).map(cat => (
+                   <button
+                     key={cat.id}
+                     onClick={() => {
+                        setActiveCategoryId(cat.id);
+                        document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     }}
+                     className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase transition-colors shrink-0 ${activeCategoryId === cat.id ? 'bg-[#C59868] text-[#100C08]' : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 hover:text-zinc-200'}`}
+                   >
+                     {cat.name}
+                   </button>
+                 ))}
+               </div>
+            </div>
+
+            <div className="p-4 space-y-8 mt-2">
               {categories.map(cat => cat.items && cat.items.length > 0 && (
-                <div key={cat.id} className="space-y-4">
-                  <h2 className="text-xl font-heading font-medium text-zinc-100 sticky top-16 bg-zinc-950/95 py-2 z-30">{cat.name}</h2>
-                  <div className="grid gap-3">
+                <div key={cat.id} id={`cat-${cat.id}`} className="space-y-4 pt-4 shrink-0">
+                  <h2 className="text-xl font-heading font-medium text-zinc-100">{cat.name}</h2>
+                  <div className="grid gap-4">
                     {cat.items.map((item: any) => (
-                      <div key={item.id} className="flex bg-zinc-900 border border-zinc-800 rounded-2xl p-4 gap-4 transition-transform active:scale-[0.98]">
-                        <div className="flex-1 flex flex-col justify-center">
-                          <h3 className="font-medium text-zinc-100 mb-1">{item.name}</h3>
-                          {item.description && <p className="text-xs text-zinc-500 mb-3 line-clamp-2">{item.description}</p>}
+                      <div key={item.id} className="flex flex-row bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden transition-transform active:scale-[0.98]">
+                        <div className="w-28 h-28 bg-gradient-to-tr from-[#1a1410] to-[#2a2018] shrink-0 border-r border-zinc-800 flex flex-col items-center justify-center relative overflow-hidden">
+                           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#C59868] to-transparent"></div>
+                           <ShoppingBag size={24} className="text-[#C59868]/30 mb-1" />
+                           <span className="text-[8px] uppercase tracking-widest text-[#C59868]/50 font-bold z-10">COFCOF</span>
+                        </div>
+                        <div className="flex-1 p-4 flex flex-col justify-center">
+                          <h3 className="font-medium text-zinc-100 mb-1 leading-snug">{item.name}</h3>
+                          {item.description && <p className="text-xs text-zinc-500 mb-3 line-clamp-2 leading-relaxed">{item.description}</p>}
                           <div className="mt-auto flex items-center justify-between">
-                            <span className="font-mono font-medium text-amber-500">R$ {item.price.toFixed(2)}</span>
+                            <span className="font-mono font-medium text-[#C59868]">R$ {item.price.toFixed(2)}</span>
                             {config.isOpen || config.allowOrdersOutsideHours ? (
                               <button 
                                 onClick={() => openItemModal(item)}
-                                className="bg-zinc-800 text-zinc-300 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+                                className="bg-[#C59868] text-[#100C08] px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-[#b08558] transition-colors shadow-sm"
                               >
-                                Adicionar
+                                Add
                               </button>
                             ) : (
-                              <span className="text-xs text-red-400 bg-red-500/10 px-3 py-1 rounded-full uppercase tracking-wider font-semibold">Fechado</span>
+                              <span className="text-[10px] text-[#AF4D4D] bg-[#AF4D4D]/10 px-2 py-1 rounded-full uppercase tracking-wider font-semibold">Fechado</span>
                             )}
                           </div>
                         </div>
@@ -303,40 +334,48 @@ export function PublicMenu({ slug }: { slug: string }) {
         {checkoutStep === 'cart' && (
           <div className="p-4 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <h2 className="text-2xl font-heading font-medium">Seu Pedido</h2>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
-              {cart.map(c => (
-                <div key={c.uid} className="p-4 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 flex items-center justify-center bg-zinc-800 rounded-md text-xs font-medium text-zinc-300">{c.qty}x</div>
-                      <div>
-                          <span className="text-sm font-medium">{c.name}</span>
-                          {c.options && c.options.length > 0 && (
-                              <div className="text-[11px] text-zinc-500 mt-0.5">
-                                  {c.options.map(o => o.name).join(', ')}
-                              </div>
-                          )}
+            {cart.length === 0 ? (
+               <div className="py-12 text-center bg-zinc-900 border border-zinc-800 rounded-2xl">
+                 <ShoppingBag size={48} className="mx-auto text-zinc-700 mb-4" />
+                 <p className="text-zinc-500 font-medium">Seu carrinho está vazio</p>
+               </div>
+            ) : (
+                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+                  {cart.map(c => (
+                    <div key={c.uid} className="p-4 flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 flex items-center justify-center bg-zinc-800 rounded-lg text-xs font-bold text-zinc-100 border border-zinc-700">{c.qty}x</div>
+                          <div>
+                              <span className="text-sm font-medium">{c.name}</span>
+                              {c.options && c.options.length > 0 && (
+                                  <div className="text-[11px] text-zinc-500 mt-0.5">
+                                      {c.options.map(o => o.name).join(', ')}
+                                  </div>
+                              )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-sm font-mono text-[#C59868] font-medium">R$ {((c.price + (c.optionsTotal||0)) * c.qty).toFixed(2)}</span>
+                          <button onClick={() => removeFromCart(c.uid)} className="text-[10px] text-[#AF4D4D] uppercase font-bold tracking-wider hover:opacity-80">Remover</button>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm font-mono text-amber-500">R$ {((c.price + (c.optionsTotal||0)) * c.qty).toFixed(2)}</span>
-                      <button onClick={() => removeFromCart(c.uid)} className="text-xs text-red-400 uppercase font-medium">Remover</button>
-                    </div>
+                  ))}
+                  <div className="p-4 bg-zinc-950/50 flex justify-between items-center font-medium">
+                    <span className="text-zinc-400 text-sm">Subtotal</span>
+                    <span className="font-mono text-zinc-100">R$ {cartTotal.toFixed(2)}</span>
                   </div>
                 </div>
-              ))}
-              <div className="p-4 bg-zinc-950/50 flex justify-between items-center font-medium">
-                <span className="text-zinc-400 text-sm">Subtotal</span>
-                <span className="font-mono">R$ {cartTotal.toFixed(2)}</span>
-              </div>
-            </div>
+            )}
 
-            <button 
+            <Button 
+              disabled={cart.length === 0}
               onClick={() => setCheckoutStep('checkout')}
-              className="w-full bg-amber-600 hover:bg-amber-500 text-amber-50 py-4 rounded-xl font-medium tracking-wide shadow-[0_0_20px_-5px_rgba(217,177,133,0.3)] transition-all"
+              className="w-full py-6 bg-[#C59868] hover:bg-[#b08558] text-[#100C08] font-bold tracking-widest uppercase"
             >
               Confirmar e Avançar
-            </button>
+            </Button>
           </div>
         )}
 
@@ -344,57 +383,52 @@ export function PublicMenu({ slug }: { slug: string }) {
           <div className="p-4 space-y-8 animate-in fade-in slide-in-from-right-8 duration-300">
             
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Identificação</h3>
-              <input 
-                type="text" 
+              <h3 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Identificação</h3>
+              <Input 
                 placeholder="Seu nome completo" 
                 value={customerName}
                 onChange={e => setCustomerName(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all" 
               />
-              <input 
+              <Input 
                 type="tel" 
                 placeholder="Seu telefone / WhatsApp" 
                 value={customerPhone}
                 onChange={e => setCustomerPhone(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all" 
               />
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">Entrega ou Retirada?</h3>
+              <h3 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Entrega ou Retirada?</h3>
               <div className="grid grid-cols-2 gap-3">
                 <button 
                   onClick={() => setDeliveryMethod('pickup')}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border ${deliveryMethod === 'pickup' ? 'bg-amber-500/10 border-amber-500/50 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`}
+                  className={`flex flex-col items-center justify-center gap-2 p-5 rounded-xl border transition-all ${deliveryMethod === 'pickup' ? 'bg-[#C59868]/10 border-[#C59868]/50 text-[#C59868]' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}
                 >
                   <MapPin size={24} />
-                  <span className="font-medium text-sm">Retirar na Loja</span>
+                  <span className="font-bold text-xs uppercase tracking-wider">Na Loja</span>
                 </button>
                 <button 
                   onClick={() => setDeliveryMethod('delivery')}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border ${deliveryMethod === 'delivery' ? 'bg-amber-500/10 border-amber-500/50 text-amber-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`}
+                  className={`flex flex-col items-center justify-center gap-2 p-5 rounded-xl border transition-all ${deliveryMethod === 'delivery' ? 'bg-[#C59868]/10 border-[#C59868]/50 text-[#C59868]' : 'bg-zinc-900 border-zinc-800 text-zinc-500'}`}
                 >
                   <ShoppingBag size={24} />
-                  <span className="font-medium text-sm">Entrega</span>
+                  <span className="font-bold text-xs uppercase tracking-wider">Entrega</span>
                 </button>
               </div>
               
               {deliveryMethod === 'delivery' && (
                 <div className="space-y-3 pt-2">
-                  <input 
-                    type="text" 
+                  <Input 
                     placeholder="Endereço completo (Rua, Número, Bairro, CEP)" 
                     value={customerAddress}
                     onChange={e => setCustomerAddress(e.target.value)}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all" 
                   />
                   
                   {config.deliveryZonesJson && (
                       <select 
                         value={deliveryZone} 
                         onChange={(e) => setDeliveryZone(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3.5 text-zinc-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none transition-all appearance-none"
+                        className="w-full bg-[#100C08] border border-zinc-800 rounded-lg px-4 py-3.5 text-zinc-100 focus:border-[#C59868] focus:ring-1 focus:ring-[#C59868] outline-none transition-all appearance-none text-sm"
                       >
                          <option value="" disabled>Selecione seu bairro ou área</option>
                          {(()=>{
@@ -408,69 +442,69 @@ export function PublicMenu({ slug }: { slug: string }) {
                       </select>
                   )}
                   
-                  <p className="text-xs text-zinc-500">Adicional de entrega será calculado na fatura.</p>
+                  <p className="text-[10px] text-zinc-500 italic">Adicional de entrega será calculado na fatura.</p>
                 </div>
               )}
             </div>
 
             <div className="space-y-4 border-t border-zinc-900 py-6">
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Subtotal</span>
-                <span>R$ {cartTotal.toFixed(2)}</span>
+                <span className="text-zinc-500 font-medium">Subtotal</span>
+                <span className="text-zinc-100">R$ {cartTotal.toFixed(2)}</span>
               </div>
-              {deliveryMethod === 'delivery' && (
+              {deliveryMethod === 'delivery' && currentDeliveryFee > 0 && (
                  <div className="flex justify-between text-sm">
-                   <span className="text-zinc-400">Taxa de Entrega</span>
-                   <span>R$ {(currentDeliveryFee).toFixed(2)}</span>
+                   <span className="text-zinc-500 font-medium">Taxa de Entrega</span>
+                   <span className="text-zinc-100">R$ {(currentDeliveryFee).toFixed(2)}</span>
                  </div>
               )}
-              <div className="flex justify-between text-lg font-medium pt-2 border-t border-zinc-900">
-                <span>Total</span>
-                <span className="text-amber-500 font-mono">R$ {finalTotal.toFixed(2)}</span>
+              <div className="flex justify-between items-center pt-4 mt-2 border-t border-zinc-900">
+                <span className="text-lg font-medium text-zinc-100">Total</span>
+                <span className="text-xl text-[#C59868] font-mono font-bold">R$ {finalTotal.toFixed(2)}</span>
               </div>
             </div>
 
-            <button 
+            <Button 
               onClick={placeOrder}
               disabled={loading}
-              className="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-amber-50 py-4 rounded-xl font-medium tracking-wide shadow-lg transition-all"
+              className="w-full py-6 bg-[#C59868] hover:bg-[#b08558] text-[#100C08] font-bold tracking-widest uppercase"
             >
-              {loading ? 'Processando...' : (paymentMethod === 'mercadopago' ? 'Pagar online via Mercado Pago' : 'Finalizar Pedido')}
-            </button>
+              {loading ? 'Processando...' : (paymentMethod === 'mercadopago' ? 'Pagar via Mercado Pago' : 'Finalizar Pedido')}
+            </Button>
           </div>
         )}
 
         {checkoutStep === 'success' && orderSummary && (
           <div className="p-8 flex flex-col items-center justify-center text-center space-y-6 mt-10 animate-in zoom-in-95 duration-500">
-            <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 bg-[#528F65]/20 text-[#528F65] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(82,143,101,0.2)]">
               <Check size={40} className="stroke-[2.5]" />
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-3xl font-heading font-medium text-zinc-50">Pedido Confirmado!</h2>
-              <p className="text-zinc-400">Número do pedido: <span className="font-mono text-zinc-300">#{orderSummary.id.split('-').pop()}</span></p>
+              <h2 className="text-3xl font-heading font-medium text-zinc-50">Pedido Confirmado</h2>
+              <p className="text-zinc-400 text-sm">Número do pedido: <span className="font-mono text-zinc-300">#{orderSummary.id.split('-').pop()}</span></p>
               
-              <div className="bg-zinc-800/50 rounded-xl p-4 flex items-center justify-between border border-zinc-700 mt-4">
-                <span className="text-zinc-300 font-medium">Status Atual:</span>
-                <span className="text-amber-500 font-medium tracking-wide uppercase">{mapStatus(orderStatus)}</span>
+              <div className="bg-zinc-900/80 rounded-xl p-4 md:px-8 py-4 flex flex-col md:flex-row items-center justify-between border border-zinc-800 mt-6 gap-2">
+                <span className="text-zinc-400 font-medium text-xs uppercase tracking-wider">Status Atual</span>
+                <span className="text-[#C59868] font-bold tracking-widest uppercase bg-[#C59868]/10 px-4 py-1.5 rounded-full text-xs">{mapStatus(orderStatus)}</span>
               </div>
             </div>
 
             {orderSummary.qrcode && (
-              <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 w-full max-w-sm mt-6">
-                <p className="text-sm border-l-2 border-amber-500 pl-2 text-left mb-4">Aguardando Pagamento</p>
-                <div className="bg-white p-4 rounded-xl flex items-center justify-center aspect-square text-zinc-900 mb-4">
-                  <QrCode size={120} className="text-zinc-900" />
+              <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 w-full max-w-sm mt-6 shadow-xl">
+                <p className="text-[10px] font-bold uppercase tracking-widest border-l-2 border-[#C59868] pl-3 text-left mb-6 text-zinc-500 flex items-center h-4">Aguardando PIX</p>
+                <div className="bg-white p-4 rounded-xl flex items-center justify-center aspect-square text-zinc-900 mb-6">
+                  <QrCode size={140} className="text-zinc-950" />
                 </div>
-                <button 
+                <Button 
                   onClick={() => {
                     navigator.clipboard.writeText(orderSummary.qrcode!);
                     alert("Chave Copiada!");
                   }}
-                  className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-sm font-medium transition-colors"
+                  className="w-full"
                 >
                   PIX Copia e Cola
-                </button>
+                </Button>
               </div>
             )}
 
@@ -480,9 +514,9 @@ export function PublicMenu({ slug }: { slug: string }) {
                 setOrderSummary(null);
                 setCart([]);
               }}
-              className="mt-8 text-amber-500 hover:text-amber-400 text-sm font-medium"
+              className="mt-8 text-zinc-500 hover:text-zinc-300 text-xs font-bold uppercase tracking-widest transition-colors"
             >
-              Fazer novo pedido
+              Voltar ao Cardápio
             </button>
           </div>
         )}
@@ -490,18 +524,18 @@ export function PublicMenu({ slug }: { slug: string }) {
 
       {/* Floating Cart Button */}
       {checkoutStep === 'menu' && cart.length > 0 && (
-         <div className="fixed bottom-6 left-0 right-0 px-4 z-40 animate-in slide-in-from-bottom-10 fade-in duration-300">
+         <div className="fixed bottom-6 left-0 right-0 px-4 md:max-w-2xl md:mx-auto z-40 animate-in slide-in-from-bottom-10 fade-in duration-300">
            <button 
              onClick={() => setCheckoutStep('cart')}
-             className="w-full flex items-center justify-between bg-amber-600 text-amber-50 px-6 py-4 rounded-2xl shadow-[0_10px_30px_-10px_rgba(217,177,133,0.5)] active:scale-95 transition-all"
+             className="w-full flex items-center justify-between bg-[#C59868] hover:bg-[#b08558] text-[#100C08] px-6 py-4 rounded-full shadow-[0_10px_30px_-10px_rgba(197,152,104,0.5)] active:scale-95 transition-all outline-none"
            >
              <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-amber-700/50 flex items-center justify-center font-medium text-sm">
+               <div className="w-8 h-8 rounded-full bg-[#100C08]/20 flex items-center justify-center font-bold text-sm">
                  {cart.reduce((a,c) => a + c.qty, 0)}
                </div>
-               <span className="font-medium tracking-wide">Ver Carrinho</span>
+               <span className="font-bold uppercase tracking-wider text-xs">Ver Carrinho</span>
              </div>
-             <span className="font-mono font-semibold tracking-tight">
+             <span className="font-mono font-bold tracking-tight text-base">
                R$ {cartTotal.toFixed(2)}
              </span>
            </button>
@@ -510,43 +544,48 @@ export function PublicMenu({ slug }: { slug: string }) {
 
       {/* Item Modal */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-zinc-950/80 p-4 sm:p-0">
-           <div className="bg-zinc-900 w-full sm:max-w-md rounded-3xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[90vh] border border-zinc-800 animate-in slide-in-from-bottom-full sm:zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm sm:p-4 animate-in fade-in duration-200">
+           <div className="bg-zinc-950 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] border border-zinc-800 shadow-2xl relative">
+             <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-black/50 backdrop-blur-md rounded-full text-zinc-300 hover:text-white border border-white/10">
+               <X size={16} />
+             </button>
+
+             <div className="w-full h-48 bg-gradient-to-tr from-[#1a1410] to-[#2a2018] shrink-0 border-b border-zinc-800 flex items-center justify-center relative">
+                 <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#C59868] to-transparent"></div>
+                 <Coffee size={40} className="text-[#C59868]/30 mb-2" />
+                 <span className="text-[10px] uppercase tracking-widest text-[#C59868]/50 font-bold z-10 block mt-2">Destaque do Cardápio</span>
+             </div>
              
-             <div className="p-5 border-b border-zinc-800 flex items-center justify-between shrink-0">
-                 <h2 className="text-xl font-heading font-medium text-zinc-100 truncate">{selectedItem.name}</h2>
-                 <button onClick={() => setSelectedItem(null)} className="p-2 text-zinc-500 hover:text-zinc-300">
-                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                 </button>
+             <div className="p-6 pb-2 shrink-0">
+                 <h2 className="text-2xl font-heading font-medium text-zinc-100">{selectedItem.name}</h2>
+                 {selectedItem.description && (
+                     <p className="text-zinc-500 text-sm mt-3 leading-relaxed">{selectedItem.description}</p>
+                 )}
+                 <div className="font-mono text-xl text-[#C59868] font-bold mt-4">R$ {selectedItem.price.toFixed(2)}</div>
              </div>
 
-             <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                 {selectedItem.description && (
-                     <p className="text-zinc-400 text-sm leading-relaxed">{selectedItem.description}</p>
-                 )}
-                 <div className="font-mono text-amber-500">R$ {selectedItem.price.toFixed(2)} Base</div>
-
+             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-8 custom-scrollbar">
                  {selectedItem.modifierGroups && selectedItem.modifierGroups.length > 0 && selectedItem.modifierGroups.map((group: any) => (
-                     <div key={group.id} className="space-y-3 pt-6 border-t border-zinc-800">
-                         <div className="flex justify-between items-baseline mb-2">
-                             <h3 className="font-medium text-zinc-200">{group.name}</h3>
-                             <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500">
-                                 {group.minSelections > 0 ? `Obrigatório (mín. ${group.minSelections})` : 'Opcional'}
+                     <div key={group.id} className="space-y-4">
+                         <div className="flex justify-between items-baseline mb-3">
+                             <h3 className="font-medium text-zinc-200 text-sm uppercase tracking-wider">{group.name}</h3>
+                             <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border border-zinc-800 text-zinc-400 bg-zinc-900/50">
+                                 {group.minSelections > 0 ? `Obg (mín ${group.minSelections})` : 'Opcional'}
                              </span>
                          </div>
                          <div className="space-y-2">
                              {group.options.map((opt: any) => {
                                  const isSelected = (itemModifiers[group.id] || []).some((o:any) => o.id === opt.id);
                                  return (
-                                     <label key={opt.id} className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-colors ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-zinc-950 border-zinc-800'}`}>
+                                     <label key={opt.id} className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-[#C59868]/10 border-[#C59868]/50 shadow-sm' : 'bg-[#100C08] border-zinc-800 hover:border-zinc-700'}`}>
                                          <div className="flex items-center gap-3">
-                                             <div className={`w-5 h-5 rounded flex items-center justify-center border ${isSelected ? 'bg-amber-500 border-amber-500 text-zinc-950' : 'border-zinc-700'}`}>
+                                             <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${isSelected ? 'bg-[#C59868] border-[#C59868] text-[#100C08]' : 'border-zinc-700 bg-zinc-900'}`}>
                                                  {isSelected && <Check size={14} strokeWidth={3} />}
                                              </div>
                                              <input type="checkbox" className="hidden" checked={isSelected} onChange={() => toggleModifier(group, opt)} />
-                                             <span className={`text-sm ${isSelected ? 'text-zinc-100 font-medium' : 'text-zinc-300'}`}>{opt.name}</span>
+                                             <span className={`text-sm ${isSelected ? 'text-zinc-100 font-medium' : 'text-zinc-400'}`}>{opt.name}</span>
                                          </div>
-                                         {opt.price > 0 && <span className="text-xs font-mono text-zinc-400">+R$ {opt.price.toFixed(2)}</span>}
+                                         {opt.price > 0 && <span className={`text-xs font-mono font-medium ${isSelected ? 'text-[#C59868]' : 'text-zinc-500'}`}>+R$ {opt.price.toFixed(2)}</span>}
                                      </label>
                                  );
                              })}
@@ -554,27 +593,27 @@ export function PublicMenu({ slug }: { slug: string }) {
                      </div>
                  ))}
 
-                 <div className="pt-6 border-t border-zinc-800 space-y-3">
-                     <h3 className="font-medium text-zinc-200">Alguma observação?</h3>
+                 <div className="space-y-3 pt-4 border-t border-zinc-800/80">
+                     <h3 className="font-medium text-zinc-200 text-sm uppercase tracking-wider">Alguma observação?</h3>
                      <textarea 
                          value={itemNotes}
                          onChange={e => setItemNotes(e.target.value)}
                          placeholder="Ex: Tirar cebola, ponto da carne..."
-                         className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500 resize-none h-20"
+                         className="w-full bg-[#100C08] border border-zinc-800 rounded-xl p-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#C59868] focus:ring-1 focus:ring-[#C59868] resize-none h-24 custom-scrollbar"
                      />
                  </div>
              </div>
 
-             <div className="p-5 border-t border-zinc-800 shrink-0">
-                 <button 
+             <div className="p-6 bg-zinc-950 border-t border-zinc-800 shrink-0">
+                 <Button 
                      onClick={confirmItemAdd}
-                     className="w-full bg-amber-600 hover:bg-amber-500 text-amber-50 py-3.5 rounded-xl font-medium tracking-wide shadow-lg transition-colors flex justify-between px-6 items-center"
+                     className="w-full py-6 bg-[#C59868] hover:bg-[#b08558] text-[#100C08] font-bold tracking-widest uppercase flex justify-between px-6 items-center"
                  >
-                     <span>Adicionar</span>
-                     <span className="font-mono">
+                     <span>Adicionar ao Pedido</span>
+                     <span className="font-mono bg-[#100C08]/10 px-3 py-1 rounded text-sm">
                          R$ {(selectedItem.price + (Object.values(itemModifiers).flat() as any[]).reduce((sum:number, o:any) => sum + (o.price || 0), 0)).toFixed(2)}
                      </span>
-                 </button>
+                 </Button>
              </div>
            </div>
         </div>

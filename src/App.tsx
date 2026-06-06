@@ -75,8 +75,7 @@ export default function App() {
 
   const handleFallback = () => {
     setHasFallenBack(true);
-    // don't change providerType manually or localStorage to avoid forcing users, 
-    // it will just fallback dynamically for this session.
+    localStorage.setItem('DATA_MODE', 'mock');
   };
 
   // Helper attached to window for manual testing of API directly in preview

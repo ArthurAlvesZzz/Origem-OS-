@@ -105,7 +105,7 @@ export function RepositoryProvider({ children, providerType = 'mock', onFallback
         .then(data => {
           if (data.status !== 'ok') {
             console.warn('API DB unhealthy');
-            if (process.env.NODE_ENV === 'development') setActualType('mock');
+            setActualType('mock');
             if (onFallbackToMock) onFallbackToMock();
           } else {
             setActualType('api');
@@ -113,7 +113,7 @@ export function RepositoryProvider({ children, providerType = 'mock', onFallback
         })
         .catch(err => {
           console.warn('Failed to reach API', err);
-          if (process.env.NODE_ENV === 'development') setActualType('mock');
+          setActualType('mock');
           if (onFallbackToMock) onFallbackToMock();
         })
         .finally(() => {

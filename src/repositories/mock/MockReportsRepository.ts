@@ -2,7 +2,19 @@ import { IReportsRepository, ReportFilters } from '../interfaces/IReportsReposit
 import { GeneratedDocument } from '../../domain/types';
 import { orders } from '../../data/mocks';
 
-let mockDocs: GeneratedDocument[] = [];
+let mockDocs: GeneratedDocument[] = [
+  {
+     id: 'doc_init_1',
+     type: 'report',
+     status: 'active',
+     sequenceNumber: 1,
+     title: 'Fechamento Mensal Maio 2026',
+     snapshotJson: { receitas: 45000, despesas: 18000, saldo: 27000 },
+     generatedByUserId: 'admin',
+     generatedAt: '2026-06-01T10:00:00Z',
+     createdAt: '2026-06-01T10:00:00Z'
+  }
+];
 
 export class MockReportsRepository implements IReportsRepository {
   async getSalesReports(filters: ReportFilters): Promise<any> {

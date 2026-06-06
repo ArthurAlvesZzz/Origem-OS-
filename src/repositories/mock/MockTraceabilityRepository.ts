@@ -24,6 +24,25 @@ export class MockTraceabilityRepository implements ITraceabilityRepository {
         publishedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'trace-2',
+        tenantId: 'tenant-1',
+        qualityReviewId: 'qr-2',
+        productionBatchId: 'batch-2',
+        productId: 'prod-2',
+        publicCode: 'DEMO-001',
+        status: 'published',
+        title: 'Mantiqueira Fermentado - Safra Especial',
+        summary: 'Um pequeno lote exclusivo submetido a fermentação anaeróbica por 72h. Corpo licoroso e intensidade ímpar, torrado sob medida para métodos filtrados.',
+        publicScore: 89.25,
+        publicDescriptorsJson: JSON.stringify(['Frutas Vermelhas', 'Cacau', 'Vinho Licoroso']),
+        publicOriginJson: JSON.stringify({ region: 'Serra da Mantiqueira', altitude: '1350m', farm: 'Sítio Alto da Serra', cropYear: '2025/2026' }),
+        roastInfoJson: JSON.stringify({ roastDate: new Date().toISOString(), roastLevel: 'Clara (Filtro)' }),
+        productInfoJson: JSON.stringify({ name: 'Mantiqueira Fermentado', variety: 'Catuaí Amarelo' }),
+        publishedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
     ];
   }

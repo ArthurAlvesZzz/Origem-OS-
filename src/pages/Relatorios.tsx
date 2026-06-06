@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../repositories/RepositoryProvider';
-import { FileText, Download, Printer, Filter, XCircle } from 'lucide-react';
+import { FileText, Download, Printer, Filter, XCircle, FileBarChart2 } from 'lucide-react';
 import { GeneratedDocument } from '../domain/types';
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
+import { Card, CardContent } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 
 export function Relatorios() {
   const { reportsRepo, settingsRepo } = useRepositories();
@@ -148,16 +150,16 @@ export function Relatorios() {
       { id: 'estoque', label: 'Estoque' },
       { id: 'producao', label: 'Produção' },
       { id: 'consignacao', label: 'Consignação' },
-      { id: 'documentos', label: 'Documentos Emitidos' }
+      { id: 'documentos', label: 'Documentos' }
     ];
     return (
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-fit mb-6 shadow-sm overflow-x-auto custom-scrollbar">
         {tabs.map(t => (
           <button 
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === t.id ? 'bg-amber-600 text-white' : 'bg-zinc-800/50 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+            className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+              activeTab === t.id ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
             }`}
           >
             {t.label}
@@ -167,120 +169,134 @@ export function Relatorios() {
     );
   };
 
-  // Replace onClick={handlePrintDoc} in the button inside the list rendering
-  // The list doesn't reference `handlePrintDoc` yet wait, let's just make sure we add these back first.
-
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col no-print">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col no-print animate-in fade-in duration-500">
       <PageHeader
         title="Central de Relatórios"
         description="Geração de documentos, extratos e relatórios pormenorizados."
         action={
           <div className="flex gap-2">
-            <button onClick={handleExportCSV} className="bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-50 px-4 py-2 rounded flex items-center gap-2 transition-colors">
-              <Download size={16} /> CSV Contador
-            </button>
-            <button onClick={handleExportJSON} className="bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-zinc-50 px-4 py-2 rounded flex items-center gap-2 transition-colors">
-              <FileText size={16} /> JSON Dados
-            </button>
+            <Button variant="outline" onClick={handleExportCSV} className="flex items-center gap-2 text-xs">
+              <Download size={14} /> CSV Contador
+            </Button>
+            <Button variant="outline" onClick={handleExportJSON} className="flex items-center gap-2 text-xs">
+              <FileText size={14} /> JSON Dados
+            </Button>
           </div>
         }
       />
 
       {renderTabs()}
 
-      <div className="flex-1 bg-zinc-900/50 rounded-xl border border-zinc-800/50 p-6 overflow-y-auto">
+      <Card className="flex-1 overflow-hidden flex flex-col">
+        <CardContent className="p-6 flex-1 overflow-y-auto custom-scrollbar">
         {loading ? (
-          <div className="text-zinc-500">Carregando relatório...</div>
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 h-64">
+             <div className="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mb-4" />
+             Carregando dados...
+          </div>
         ) : (
           <>
             {activeTab === 'vendas' && salesData && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                   <div className="bg-zinc-800/30 p-4 rounded-lg border border-zinc-800">
-                     <p className="text-sm text-zinc-400">Total Vendido</p>
-                     <p className="text-2xl font-semibold text-zinc-100">{formatCurrency(salesData.totalSales)}</p>
-                   </div>
-                   <div className="bg-zinc-800/30 p-4 rounded-lg border border-zinc-800">
-                     <p className="text-sm text-zinc-400">Descontos</p>
-                     <p className="text-2xl font-semibold text-amber-500">{formatCurrency(salesData.totalDiscount)}</p>
-                   </div>
-                   <div className="bg-zinc-800/30 p-4 rounded-lg border border-zinc-800">
-                     <p className="text-sm text-zinc-400">Ticket Médio</p>
-                     <p className="text-2xl font-semibold text-zinc-100">{formatCurrency(salesData.ticketMedio)}</p>
-                   </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   <Card className="bg-zinc-900/40">
+                     <CardContent className="p-6 text-center">
+                       <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 mb-1">Total Vendido</p>
+                       <p className="text-2xl font-semibold font-heading text-zinc-100">{formatCurrency(salesData.totalSales)}</p>
+                     </CardContent>
+                   </Card>
+                   <Card className="bg-zinc-900/40">
+                     <CardContent className="p-6 text-center">
+                       <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 mb-1">Descontos</p>
+                       <p className="text-2xl font-semibold font-heading text-amber-500">{formatCurrency(salesData.totalDiscount)}</p>
+                     </CardContent>
+                   </Card>
+                   <Card className="bg-zinc-900/40">
+                     <CardContent className="p-6 text-center">
+                       <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 mb-1">Ticket Médio</p>
+                       <p className="text-2xl font-semibold font-heading text-emerald-400">{formatCurrency(salesData.ticketMedio)}</p>
+                     </CardContent>
+                   </Card>
                 </div>
-                <div className="flex justify-end">
-                   <button onClick={() => handleGenerateDoc('report', 'Relatório de Vendas', salesData)} className="bg-amber-600/10 text-amber-500 border border-amber-500/20 px-4 py-2 rounded text-sm hover:bg-amber-600/20 transition-colors">
-                     Salvar Snapshot e Gerar Doc
-                   </button>
+                <div className="flex justify-end border-t border-zinc-800/80 mt-6 pt-6">
+                   <Button onClick={() => handleGenerateDoc('report', 'Relatório de Vendas', salesData)} className="flex items-center gap-2">
+                     <FileText size={16} /> Salvar Snapshot Mensal
+                   </Button>
                 </div>
               </div>
             )}
             
             {activeTab === 'financeiro' && financeData && (
                <div className="space-y-6">
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                   <div className="bg-zinc-800/30 p-4 rounded-lg border border-zinc-800">
-                     <p className="text-sm text-zinc-400">Receitas</p>
-                     <p className="text-2xl font-semibold text-emerald-500">{formatCurrency(financeData.receitas)}</p>
-                   </div>
-                   <div className="bg-zinc-800/30 p-4 rounded-lg border border-zinc-800">
-                     <p className="text-sm text-zinc-400">Despesas</p>
-                     <p className="text-2xl font-semibold text-red-500">{formatCurrency(financeData.despesas)}</p>
-                   </div>
-                   <div className="bg-zinc-800/30 p-4 rounded-lg border border-zinc-800">
-                     <p className="text-sm text-zinc-400">Saldo Periodo (DRE Simples)</p>
-                     <p className="text-2xl font-semibold text-zinc-100">{formatCurrency(financeData.saldo)}</p>
-                   </div>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   <Card className="bg-zinc-900/40">
+                     <CardContent className="p-6 text-center">
+                       <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 mb-1">Receitas Consolidadas</p>
+                       <p className="text-2xl font-semibold font-heading text-emerald-500">{formatCurrency(financeData.receitas)}</p>
+                     </CardContent>
+                   </Card>
+                   <Card className="bg-zinc-900/40">
+                     <CardContent className="p-6 text-center">
+                       <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 mb-1">Despesas Operacionais</p>
+                       <p className="text-2xl font-semibold font-heading text-red-500">{formatCurrency(financeData.despesas)}</p>
+                     </CardContent>
+                   </Card>
+                   <Card className="bg-zinc-900/40">
+                     <CardContent className="p-6 text-center">
+                       <p className="text-xs uppercase tracking-wider font-semibold text-zinc-500 mb-1">Saldo Líquido (DRE)</p>
+                       <p className="text-2xl font-semibold font-heading text-zinc-100">{formatCurrency(financeData.saldo)}</p>
+                     </CardContent>
+                   </Card>
                 </div>
-                <div className="flex justify-end">
-                   <button onClick={() => handleGenerateDoc('report', 'Extrato Financeiro e DRE', financeData)} className="bg-amber-600/10 text-amber-500 border border-amber-500/20 px-4 py-2 rounded text-sm hover:bg-amber-600/20 transition-colors">
-                     Salvar Snapshot e Gerar Doc
-                   </button>
+                <div className="flex justify-end border-t border-zinc-800/80 mt-6 pt-6">
+                   <Button onClick={() => handleGenerateDoc('report', 'Extrato Financeiro e DRE', financeData)} className="flex items-center gap-2">
+                     <FileText size={16} /> Salvar Snapshot Contábil
+                   </Button>
                 </div>
                </div>
             )}
 
             {activeTab === 'documentos' && (
-              <div className="space-y-4">
-                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-lg text-amber-500 flex items-start gap-3">
+              <div className="space-y-6">
+                <div className="bg-amber-500/10 border border-amber-500/20 p-5 rounded-xl text-amber-500 flex items-start gap-3">
                    <FileText size={20} className="shrink-0 mt-0.5" />
-                   <div className="text-sm">
-                     <strong>Aviso Legal Importante:</strong> Todos os documentos gerados aqui são "Documentos auxiliares sem valor fiscal". Não substituem NFe, NFCe ou relatórios contábeis oficiais enviados pelo seu contador.
+                   <div className="text-xs font-medium">
+                     <strong className="block mb-1 text-sm">Aviso Legal Importante:</strong>
+                     Todos os documentos gerados aqui são "Documentos Auxiliares Sem Valor Fiscal". Eles não substituem as exigências formais de NFe/NFCe ou os relatórios contábeis oficiais gerados pelo seu contador. Apenas servem para arquivamento do gestor.
                    </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                   <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto border border-zinc-800/80 rounded-xl">
+                   <table className="w-full text-left bg-zinc-950/30">
                       <thead>
-                        <tr className="border-b border-zinc-800 text-zinc-400 text-xs uppercase">
-                          <th className="py-3 px-4 font-medium">Núm</th>
-                          <th className="py-3 px-4 font-medium">Data</th>
-                          <th className="py-3 px-4 font-medium">Título</th>
-                          <th className="py-3 px-4 font-medium">Status</th>
-                          <th className="py-3 px-4 font-medium text-right">Ação</th>
+                        <tr className="border-b border-zinc-800/80 text-zinc-500 text-[10px] uppercase tracking-wider font-bold bg-zinc-900/50">
+                          <th className="py-4 px-6">Núm. Doc</th>
+                          <th className="py-4 px-6">Data Geração</th>
+                          <th className="py-4 px-6">Referência</th>
+                          <th className="py-4 px-6">Validade</th>
+                          <th className="py-4 px-6 text-right">Opções</th>
                         </tr>
                       </thead>
-                      <tbody className="text-sm">
+                      <tbody className="text-sm divide-y divide-zinc-800/50">
                         {documents.map(doc => (
-                          <tr key={doc.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 group">
-                             <td className="py-3 px-4 text-zinc-300">#{doc.sequenceNumber}</td>
-                             <td className="py-3 px-4 text-zinc-400">{new Date(doc.createdAt || doc.generatedAt).toLocaleDateString()}</td>
-                             <td className="py-3 px-4 font-medium text-zinc-100">{doc.title}</td>
-                             <td className="py-3 px-4">
-                               <span className={`px-2 py-1 text-[10px] rounded uppercase tracking-wider font-semibold border ${doc.status === 'voided' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
-                                 {doc.status === 'voided' ? 'Cancelado' : 'Válido'}
+                          <tr key={doc.id} className="hover:bg-zinc-900/50 group transition-colors">
+                             <td className="py-4 px-6 font-mono text-xs text-zinc-400">#{String(doc.sequenceNumber).padStart(6,'0')}</td>
+                             <td className="py-4 px-6 text-zinc-300 text-xs">{new Date(doc.createdAt || doc.generatedAt).toLocaleString()}</td>
+                             <td className="py-4 px-6 font-medium text-zinc-100">{doc.title}</td>
+                             <td className="py-4 px-6">
+                               <span className={`px-2 py-0.5 text-[10px] rounded uppercase tracking-wider font-bold border ${doc.status === 'voided' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
+                                 {doc.status === 'voided' ? 'Invalido' : 'Regular'}
                                </span>
                              </td>
-                             <td className="py-3 px-4 text-right">
-                                <div className="flex items-center justify-end gap-2">
+                             <td className="py-4 px-6 text-right">
+                                <div className="flex items-center justify-end gap-3">
                                   {doc.status === 'active' && (
-                                     <button title="Cancelar" onClick={() => handleVoidDoc(doc.id)} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                     <button title="Cancelar" onClick={() => handleVoidDoc(doc.id)} className="text-zinc-500 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
                                        <XCircle size={16} />
                                      </button>
                                   )}
-                                  <button title="Imprimir" onClick={() => handlePrintDoc(doc)} className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-amber-500/10 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                  <button title="Imprimir Recibo" onClick={() => handlePrintDoc(doc)} className="text-zinc-500 hover:text-zinc-100 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
                                      <Printer size={16} />
                                   </button>
                                 </div>
@@ -288,7 +304,9 @@ export function Relatorios() {
                           </tr>
                         ))}
                         {documents.length === 0 && (
-                          <tr><td colSpan={5} className="py-8 text-center text-zinc-500">Nenhum documento gerado no momento.</td></tr>
+                          <tr><td colSpan={5} className="py-12 text-center">
+                            <EmptyState icon={<FileBarChart2 size={32} className="text-zinc-600"/>} title="Nenhum Documento Gerado" description="Você pode gerar reports isolados em Vendas ou Financeiro para salvar snapshots nesta grid." />
+                            </td></tr>
                         )}
                       </tbody>
                    </table>
@@ -297,17 +315,16 @@ export function Relatorios() {
             )}
             
             {['estoque', 'producao', 'consignacao'].includes(activeTab) && (
-              <div className="py-12 flex flex-col items-center justify-center text-center">
-                 <Filter size={32} className="text-zinc-600 mb-4" />
-                 <h3 className="text-lg font-medium text-zinc-50">Dados Consolidados</h3>
-                 <p className="text-zinc-400 max-w-sm mt-2 text-sm">Resumo gerencial sob medida para explorar histórico e análises desta área. (Visão completa em breve)</p>
-                 <button className="mt-4 bg-zinc-800 text-zinc-100 border border-zinc-700 px-4 py-2 rounded text-sm hover:bg-zinc-700">Exportar Bruto CSV</button>
+              <div className="py-20 flex flex-col items-center justify-center text-center">
+                 <EmptyState icon={<Filter size={32} className="text-zinc-600"/>} title="Dados Consolidados" description="Resumo gerencial sob medida para explorar histórico e análises desta área. (Visão completa em breve)" />
+                 <Button variant="outline" className="mt-6">Exportar Bruto (CSV)</Button>
               </div>
             )}
 
           </>
         )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

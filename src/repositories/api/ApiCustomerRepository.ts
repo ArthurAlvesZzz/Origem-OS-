@@ -40,14 +40,10 @@ export class ApiCustomerRepository implements ICustomerRepository {
   }
 
   async deleteCustomer(id: string): Promise<void> {
-    const res = await safeFetch(`/api/customers/${id}`, {
+    await safeFetch(`/api/customers/${id}`, {
       method: 'DELETE',
       headers: this.getHeaders()
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Falha ao excluir cliente');
-    }
   }
 
   async getCustomerBalance(id: string) {

@@ -2,7 +2,15 @@ export const products = [
   { id: '1', sku: 'CERR-250-NAT', name: 'Cerrado Natural 250g', category: 'Café Torrado', price: 45.00, cost: 18.50, stock: 120, minStock: 30, unit: 'un', score: 86, active: true },
   { id: '2', sku: 'CERR-1KG-NAT', name: 'Cerrado Natural 1kg', category: 'Café Torrado', price: 140.00, cost: 65.00, stock: 45, minStock: 15, unit: 'un', score: 86, active: true },
   { id: '3', sku: 'MANT-250-LAV', name: 'Mantiqueira Lavado 250g', category: 'Café Torrado', price: 55.00, cost: 22.00, stock: 8, minStock: 20, unit: 'un', score: 88.5, active: true },
-  { id: '4', sku: 'GRAO-CRU-CERR', name: 'Grão Cru Cerrado', category: 'Insumo', price: 0, cost: 35.00, stock: 450, minStock: 120, unit: 'kg', score: 86, active: true }
+  { id: '4', sku: 'GRAO-CRU-CERR', name: 'Grão Cru Cerrado', category: 'Insumo', price: 0, cost: 35.00, stock: 450, minStock: 120, unit: 'kg', score: 86, active: true },
+  { id: '5', sku: 'MOG-250-FER', name: 'Mogiana Fermentado 250g', category: 'Café Torrado', price: 65.00, cost: 28.00, stock: 35, minStock: 10, unit: 'un', score: 89, active: true },
+  { id: '6', sku: 'CAPU-250-HON', name: 'Caparaó Honey 250g', category: 'Café Torrado', price: 50.00, cost: 20.00, stock: 60, minStock: 15, unit: 'un', score: 87.5, active: true },
+  { id: '7', sku: 'DRIP-CERR', name: 'Drip Coffee Cerrado (10 sachês)', category: 'Café Torrado', price: 35.00, cost: 14.00, stock: 85, minStock: 20, unit: 'cx', score: 86, active: true },
+  { id: '8', sku: 'DRIP-MANT', name: 'Drip Coffee Mantiqueira (10 sachês)', category: 'Café Torrado', price: 42.00, cost: 16.50, stock: 40, minStock: 15, unit: 'cx', score: 88.5, active: true },
+  { id: '9', sku: 'CAPS-COMP', name: 'Cápsulas Compatíveis Nespresso (10 un)', category: 'Cápsulas', price: 28.00, cost: 12.00, stock: 200, minStock: 50, unit: 'cx', score: 0, active: true },
+  { id: '10', sku: 'KIT-PRES-1', name: 'Kit Presente: Caneca + 250g', category: 'Acessórios', price: 110.00, cost: 45.00, stock: 15, minStock: 5, unit: 'kit', score: 0, active: true },
+  { id: '11', sku: 'CANECA-COF', name: 'Caneca Ceramica COFCOF', category: 'Acessórios', price: 75.00, cost: 30.00, stock: 45, minStock: 10, unit: 'un', score: 0, active: true },
+  { id: '12', sku: 'GRAO-CRU-MANT', name: 'Grão Cru Mantiqueira', category: 'Insumo', price: 0, cost: 42.00, stock: 300, minStock: 80, unit: 'kg', score: 88.5, active: true }
 ];
 
 export const customers = [
@@ -20,7 +28,9 @@ export const orders = [
 export const partners = [
   { id: 'p1', name: 'Empório do Grão', type: 'Revenda', status: 'Ativo', defaultTermDays: 30 },
   { id: 'p2', name: 'Padaria Artesanal SP', type: 'Revenda', status: 'Ativo', defaultTermDays: 15 },
-  { id: 'p3', name: 'Hotel Premium Resort', type: 'Hospedagem', status: 'Ativo', defaultTermDays: 45 }
+  { id: 'p3', name: 'Hotel Premium Resort', type: 'Hospedagem', status: 'Ativo', defaultTermDays: 45 },
+  { id: 'p4', name: 'Supermercado Central', type: 'Supermercado', status: 'Ativo', defaultTermDays: 30 },
+  { id: 'p5', name: 'Cafeteria do Bairro', type: 'Cafeteria', status: 'Inativo', defaultTermDays: 15 }
 ];
 
 export const consignments = [

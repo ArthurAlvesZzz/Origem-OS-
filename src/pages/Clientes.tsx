@@ -4,6 +4,9 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { Customer } from '../domain/types';
+import { Card, CardContent } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
 
 export function Clientes() {
   const { customerRepo } = useRepositories();
@@ -35,33 +38,31 @@ export function Clientes() {
   const filtered = customers.filter(c => filterType === 'todos' || c.type === filterType || (filterType === 'bloqueados' && c.status === 'blocked'));
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col animate-in fade-in duration-500">
       <PageHeader
         title="Clientes & Parceiros"
         description="Gerencie sua rede de contatos B2B, B2C e distribuidores."
         action={
-          <button 
+          <Button 
             onClick={() => { setSelectedCustomer(undefined); setDrawerOpen(true); }}
-            className="flex items-center gap-2 bg-zinc-50 text-zinc-950 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors"
+            className="flex items-center gap-2"
           >
             <Plus size={16} /> Novo Contato
-          </button>
+          </Button>
         }
       />
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-         <div className="relative flex-1">
-           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-           <input 
-             type="text"
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+         <div className="flex-1">
+           <Input 
+             icon={<Search size={18} className="text-zinc-500" />}
              placeholder="Buscar por nome, e-mail ou documento..."
-             className="w-full bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-lg pl-10 pr-4 py-2.5 outline-none focus:border-amber-500/50 transition-colors"
            />
          </div>
          <select 
            value={filterType}
            onChange={(e) => setFilterType(e.target.value)}
-           className="bg-zinc-900 border border-zinc-800 text-zinc-100 rounded-lg px-4 py-2.5 outline-none focus:border-amber-500/50 min-w-[200px]"
+           className="bg-zinc-950 border border-zinc-800/80 text-zinc-300 text-sm font-medium rounded-xl px-4 py-2.5 outline-none hover:border-zinc-700 focus:border-amber-500/50 transition-colors sm:w-64 cursor-pointer"
          >
            <option value="todos">Todos os Contatos (Ativos)</option>
            <option value="b2c">Clientes Final (B2C)</option>
@@ -72,27 +73,31 @@ export function Clientes() {
          </select>
       </div>
 
-      <div className="bg-zinc-900/50 rounded-xl border border-zinc-800/50 flex-1 overflow-hidden flex flex-col">
+      <Card className="flex-1 overflow-hidden flex flex-col">
+        <CardContent className="p-0 flex-1 flex flex-col">
           {loading ? (
-            <div className="flex-1 flex items-center justify-center text-zinc-500">Caregando...</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 p-8">
+              <div className="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mb-4" />
+              Carregando contatos...
+            </div>
           ) : filtered.length === 0 ? (
-            <div className="flex-1 p-8">
+            <div className="flex-1 p-8 flex items-center justify-center">
               <EmptyState
-                icon={<Briefcase size={24} />}
+                icon={<Briefcase size={32} className="text-zinc-600" />}
                 title="Nenhum contato encontrado"
-                description="Não há contatos cadastrados para o filtro selecionado."
+                description="Não há contatos cadastrados para o filtro selecionado no momento."
               />
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto flex-1">
               <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-zinc-900 text-zinc-400 border-b border-zinc-800">
+                <thead className="bg-zinc-950/50 text-zinc-400 border-b border-zinc-800/80">
                   <tr>
-                    <th className="px-6 py-4 font-medium">Nome / Documento</th>
-                    <th className="px-6 py-4 font-medium">Tipo</th>
-                    <th className="px-6 py-4 font-medium">Contato</th>
-                    <th className="px-6 py-4 font-medium">Localidade</th>
-                    <th className="px-6 py-4 font-medium">Status</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-[10px]">Nome / Documento</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-[10px]">Tipo de Vínculo</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-[10px]">Canais de Contato</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-[10px]">Localidade</th>
+                    <th className="px-6 py-4 font-semibold uppercase tracking-wider text-[10px]">Status Operacional</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/50">
@@ -100,49 +105,52 @@ export function Clientes() {
                     <tr 
                       key={customer.id} 
                       onClick={() => { setSelectedCustomer(customer); setDrawerOpen(true); }}
-                      className="hover:bg-zinc-800/50 cursor-pointer transition-colors"
+                      className="hover:bg-zinc-900 cursor-pointer transition-colors group"
                     >
                       <td className="px-6 py-4">
-                        <div className="font-medium text-zinc-100">{customer.name}</div>
+                        <div className="font-semibold text-zinc-100 group-hover:text-amber-400 transition-colors">{customer.name}</div>
                         {(customer.document || customer.legalName) && (
-                          <div className="text-xs text-zinc-500 mt-1">
+                          <div className="text-xs font-mono text-zinc-500 mt-1 flex items-center gap-1.5">
                             {customer.document} {customer.legalName ? `· ${customer.legalName}` : ''}
                           </div>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded inline-flex text-[10px] font-bold uppercase tracking-wider ${
-                          customer.type === 'partner' ? 'bg-indigo-500/10 text-indigo-400' :
-                          customer.type === 'b2b' ? 'bg-amber-500/10 text-amber-400' :
-                          customer.type === 'b2c' ? 'bg-zinc-800 text-zinc-300' :
-                          'bg-emerald-500/10 text-emerald-400'
+                        <span className={`px-2.5 py-1 rounded inline-flex text-[10px] font-bold uppercase tracking-wider border ${
+                          customer.type === 'partner' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                          customer.type === 'b2b' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                          customer.type === 'b2c' ? 'bg-zinc-900 text-zinc-400 border-zinc-700' :
+                          'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                         }`}>
                           {customer.type}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                         <div className="flex flex-col gap-1">
+                         <div className="flex flex-col gap-1.5">
                            {customer.email && (
-                             <div className="flex items-center gap-2 text-zinc-400"><Mail size={12} /> {customer.email}</div>
+                             <div className="flex items-center gap-2 text-zinc-400 text-xs"><Mail size={12} className="text-zinc-500"/> {customer.email}</div>
                            )}
                            {Math.random() /* only fake presentation for now */ && customer.phone && (
-                             <div className="flex items-center gap-2 text-zinc-400"><Phone size={12} /> {customer.phone}</div>
+                             <div className="flex items-center gap-2 text-zinc-400 text-xs"><Phone size={12} className="text-zinc-500"/> {customer.phone}</div>
                            )}
                          </div>
                       </td>
-                      <td className="px-6 py-4 text-zinc-400">
+                      <td className="px-6 py-4 text-zinc-400 text-xs">
                         {customer.city && customer.state ? (
-                          <div className="flex items-center gap-2"><MapPin size={12}/> {customer.city}, {customer.state}</div>
+                          <div className="flex items-center gap-1.5"><MapPin size={12} className="text-zinc-500"/> {customer.city}, {customer.state}</div>
                         ) : 'Não informado'}
                       </td>
                       <td className="px-6 py-4">
-                         <span className={`px-2.5 py-1 rounded-full border text-xs font-medium ${
-                           customer.status === 'blocked' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                           customer.status === 'inactive' ? 'bg-zinc-800 text-zinc-500 border-zinc-700' :
-                           'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                         }`}>
-                           {customer.status === 'blocked' ? 'Bloqueado' : customer.status === 'inactive' ? 'Inativo' : 'Ativo'}
-                         </span>
+                         <div className="flex items-center gap-2">
+                           <div className={`w-2 h-2 rounded-full ${
+                             customer.status === 'blocked' ? 'bg-red-500' :
+                             customer.status === 'inactive' ? 'bg-zinc-600' :
+                             'bg-emerald-500'
+                           }`} />
+                           <span className="text-xs font-medium text-zinc-300">
+                             {customer.status === 'blocked' ? 'Bloqueado' : customer.status === 'inactive' ? 'Inativo' : 'Ativo'}
+                           </span>
+                         </div>
                       </td>
                     </tr>
                   ))}
@@ -150,7 +158,8 @@ export function Clientes() {
               </table>
             </div>
           )}
-      </div>
+        </CardContent>
+      </Card>
 
       {isDrawerOpen && (
         <CustomerDrawer 
@@ -217,49 +226,49 @@ function CustomerDrawer({ customer, onClose, onSave }: { customer?: Customer, on
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-xl bg-zinc-950 h-full flex flex-col border-l border-zinc-800 shadow-2xl animate-in slide-in-from-right-full">
-        <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
+      <div className="relative w-full max-w-xl bg-zinc-950 h-full flex flex-col border-l border-zinc-800/80 shadow-2xl animate-in slide-in-from-right-full duration-300">
+        <div className="p-6 border-b border-zinc-800/80 flex justify-between items-center bg-zinc-900/40">
           <div>
-            <h2 className="text-xl font-heading font-semibold text-zinc-50">{customer ? 'Editar Contato' : 'Novo Contato'}</h2>
-            <p className="text-sm text-zinc-400 mt-1">{customer ? `ID: ${customer.id}` : 'Preencha os dados básicos'}</p>
+            <h2 className="text-xl font-heading font-semibold text-zinc-50">{customer ? 'Editar Contato' : 'Cadastrar Novo Parceiro'}</h2>
+            <p className="text-sm text-zinc-400 mt-1">{customer ? `ID Referência: ${customer.id}` : 'Preencha os dados cadastrais na ficha abaixo'}</p>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
           {/* Balance/Exposure card if editing */}
           {customer && balance && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex gap-6">
+            <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-5 flex gap-6 mt-2 mb-2">
               <div>
-                 <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">A Receber</div>
-                 <div className="text-xl font-heading text-amber-500">R$ {balance.openReceivables.toFixed(2)}</div>
+                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-1.5 flex items-center gap-1.5"><Briefcase size={12}/> A Receber Aberto</div>
+                 <div className="text-xl font-heading font-semibold text-emerald-500 tracking-tight">R$ {balance.openReceivables.toFixed(2)}</div>
               </div>
-              <div className="w-px bg-zinc-800" />
+              <div className="w-px bg-zinc-800/80" />
               <div>
-                 <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Consignado</div>
-                 <div className="text-xl font-heading text-indigo-400">R$ {balance.consignmentBalance.toFixed(2)}</div>
+                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-1.5 flex items-center gap-1.5"><FileText size={12}/> Consignado em Ponto</div>
+                 <div className="text-xl font-heading font-semibold text-indigo-400 tracking-tight">R$ {balance.consignmentBalance.toFixed(2)}</div>
               </div>
-              <div className="w-px bg-zinc-800" />
+              <div className="w-px bg-zinc-800/80" />
               <div>
-                 <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">Exposição Total</div>
-                 <div className="text-xl font-heading text-zinc-50">R$ {balance.totalExposure.toFixed(2)}</div>
+                 <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-1.5 ">Exposição Total</div>
+                 <div className="text-xl font-heading font-semibold text-zinc-100 tracking-tight">R$ {balance.totalExposure.toFixed(2)}</div>
               </div>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Nome / Fantasia</label>
-              <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Nome Completo / Nome Fantasia *</label>
+              <Input value={name} onChange={e => setName(e.target.value)} />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Razão Social</label>
-              <input value={legalName} onChange={e => setLegalName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Razão Social (Se PJ)</label>
+              <Input value={legalName} onChange={e => setLegalName(e.target.value)} />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Tipo do Contato</label>
-              <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Categoria de Vínculo</label>
+              <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-amber-500/50 outline-none hover:border-zinc-700 transition-colors">
                 <option value="b2c">Cliente Final (B2C)</option>
                 <option value="b2b">Cliente Atacado (B2B)</option>
                 <option value="partner">Parceiro (Consignação)</option>
@@ -268,17 +277,17 @@ function CustomerDrawer({ customer, onClose, onSave }: { customer?: Customer, on
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Status</label>
-              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none">
-                <option value="active">Ativo</option>
-                <option value="inactive">Inativo</option>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Status Operacional</label>
+              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-amber-500/50 outline-none hover:border-zinc-700 transition-colors">
+                <option value="active">Ativo (Liberado)</option>
+                <option value="inactive">Inativo / Pausado</option>
                 <option value="blocked">Bloqueado</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Tipo Documento</label>
-              <select value={documentType} onChange={e => setDocumentType(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Tipo de Documento Oficial</label>
+              <select value={documentType} onChange={e => setDocumentType(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-amber-500/50 outline-none hover:border-zinc-700 transition-colors">
                 <option value="none">Isento / Nenhum</option>
                 <option value="cpf">CPF</option>
                 <option value="cnpj">CNPJ</option>
@@ -286,67 +295,66 @@ function CustomerDrawer({ customer, onClose, onSave }: { customer?: Customer, on
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Número Documento</label>
-              <input value={documentVal} onChange={e => setDocumentVal(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Número Documento</label>
+              <Input value={documentVal} onChange={e => setDocumentVal(e.target.value)} />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">E-mail</label>
-              <input value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">E-mail de Faturamento</label>
+              <Input value={email} onChange={e => setEmail(e.target.value)} type="email"/>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Telefone</label>
-              <input value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Telefone Comercial / WhatsApp</label>
+              <Input value={phone} onChange={e => setPhone(e.target.value)} />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Prazo Padrão Pgmto (Dias)</label>
-              <input type="number" value={defaultPaymentTermsDays} onChange={e => setDefaultPaymentTermsDays(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+               <div className="bg-zinc-900/50 border border-zinc-800/50 p-4 rounded-xl mt-2">
+                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Condição Prazo Padrão Pgmto (Em Dias)</label>
+                 <Input type="number" value={defaultPaymentTermsDays} onChange={e => setDefaultPaymentTermsDays(Number(e.target.value))} />
+                 <p className="text-xs text-zinc-500 mt-2">Este prazo será assumido em novos orçamentos ou consignações atreladas a este fornecedor/cliente.</p>
+               </div>
             </div>
 
-            <div className="col-span-2 mt-4 pt-4 border-t border-zinc-800">
-              <h3 className="text-sm font-semibold font-heading text-zinc-100 mb-4 flex items-center gap-2">
-                <FileText size={16} className="text-amber-500" /> CRM Local & Fidelidade
+            <div className="col-span-2 mt-6 pt-6 border-t border-zinc-800/80">
+              <h3 className="text-sm font-semibold font-heading text-zinc-100 mb-5 flex items-center gap-2">
+                <FileText size={16} className="text-amber-500" /> Profiling & CRM Enrichment
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1.5">Nível de Fidelidade</label>
-                  <select value={loyaltyLevel} onChange={e => setLoyaltyLevel(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none">
-                    <option value="">Nenhum</option>
-                    <option value="Bronze">Bronze</option>
-                    <option value="Prata">Prata</option>
-                    <option value="Ouro">Ouro</option>
-                    <option value="Black">Black</option>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Nível de Fidelidade (Tier)</label>
+                  <select value={loyaltyLevel} onChange={e => setLoyaltyLevel(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-amber-500/50 outline-none hover:border-zinc-700 transition-colors">
+                    <option value="">Status Não Atribuído</option>
+                    <option value="Bronze">Nível Bronze</option>
+                    <option value="Prata">Nível Prata</option>
+                    <option value="Ouro">Nível Ouro</option>
+                    <option value="Black">Nível Black Exclusivo</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1.5">Pontos</label>
-                  <input type="number" value={loyaltyPoints} onChange={e => setLoyaltyPoints(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Score (Pontos Retidos)</label>
+                  <Input type="number" value={loyaltyPoints} onChange={e => setLoyaltyPoints(Number(e.target.value))} />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1.5">Produtos Favoritos</label>
-                  <input value={favoriteProducts} onChange={e => setFavoriteProducts(e.target.value)} placeholder="Ex: Bolo de Cenoura, Cappuccino" className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Itens e Preferências de Compra Frequentes</label>
+                  <Input value={favoriteProducts} onChange={e => setFavoriteProducts(e.target.value)} placeholder="Ex: Bolo de Cenoura, Cappuccino Duplo..." />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-zinc-400 mb-1.5">Restrições Alimentares</label>
-                  <input value={dietaryRestrictions} onChange={e => setDietaryRestrictions(e.target.value)} placeholder="Ex: Sem lactose, Vegano" className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Restrições Alimentares / Observações Críticas</label>
+                  <Input value={dietaryRestrictions} onChange={e => setDietaryRestrictions(e.target.value)} placeholder="Ex: Intolerância Severa a Lactose, Celíaco..." />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1.5">Nota NPS (0-10)</label>
-                  <input type="number" min="0" max="10" value={npsScore} onChange={e => setNpsScore(e.target.value as any)} placeholder="Ex: 9" className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:border-amber-500/50 outline-none" />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Nota Histórica NPS (0-10)</label>
+                  <Input type="number" min="0" max="10" value={npsScore} onChange={e => setNpsScore(e.target.value as any)} placeholder="Ex: 9 - Cliente Promotor" />
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="p-6 border-t border-zinc-800 flex gap-3 bg-zinc-900/50">
-          <button onClick={onClose} className="flex-1 py-2.5 font-medium text-zinc-300 hover:text-zinc-50 hover:bg-zinc-800 rounded-lg transition-colors border border-zinc-700">
-            Cancelar
-          </button>
-          <button onClick={handleSubmit} disabled={saving} className="flex-1 py-2.5 font-medium bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors disabled:opacity-50">
-            {saving ? 'Salvando...' : 'Salvar Contato'}
-          </button>
+        <div className="p-6 border-t border-zinc-800/80 flex gap-3 bg-zinc-900/40">
+           <Button variant="outline" onClick={onClose} className="flex-1"> Cancelar e Fechar </Button>
+           <Button onClick={handleSubmit} disabled={saving} className="flex-1"> {saving ? 'Processando dados...' : 'Salvar Ficha do Contato'} </Button>
         </div>
       </div>
     </div>

@@ -78,11 +78,42 @@ export class MockDashboardRepository implements IDashboardRepository {
   }
 
   async getRecentActivity(): Promise<DashboardActivity[]> {
+    const today = new Date();
+    const d1 = new Date(today.getTime() - 1000 * 60 * 15).toISOString(); // 15 mins ago
+    const d2 = new Date(today.getTime() - 1000 * 60 * 60 * 2).toISOString(); // 2 hours ago
+    const d3 = new Date(today.getTime() - 1000 * 60 * 60 * 5).toISOString(); // 5 hours ago
+    const d4 = new Date(today.getTime() - 1000 * 60 * 60 * 24).toISOString(); // 1 day ago
+    const d5 = new Date(today.getTime() - 1000 * 60 * 60 * 48).toISOString(); // 2 days ago
+
     return [
       {
         id: '1',
-        date: new Date().toISOString(),
-        message: 'Pedido #123 criado.',
+        date: d1,
+        message: 'Pedido #4928 recebido pelo Cardápio Público (R$ 155,00) - Cliente Avulso',
+        type: 'pedido'
+      },
+      {
+        id: '2',
+        date: d2,
+        message: 'Produção #TR-047 finalizada. 15kg de Mantiqueira Lavado adicionados.',
+        type: 'producao'
+      },
+      {
+        id: '3',
+        date: d3,
+        message: 'Transferência PIX confirmada. Fatura EMP-030 quitada (R$ 900,00)',
+        type: 'financeiro'
+      },
+      {
+        id: '4',
+        date: d4,
+        message: 'Acerto de Consignação efetuado (Padaria Artesanal SP). 12 pacotes vendidos.',
+        type: 'consignacao'
+      },
+      {
+        id: '5',
+        date: d5,
+        message: 'Atendimento Omnichannel via WhatsApp iniciado com +55 11 99999-9999',
         type: 'pedido'
       }
     ];

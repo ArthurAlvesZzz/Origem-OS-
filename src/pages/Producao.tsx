@@ -57,34 +57,27 @@ export function Producao() {
         }
       />
 
-      <div className="flex overflow-x-auto pb-2 border-b border-zinc-800 gap-6 no-scrollbar mb-6">
-        <button onClick={() => setActiveTab('demand')} className={`flex items-center gap-2 pb-3 font-medium text-sm whitespace-nowrap transition-colors relative ${activeTab === 'demand' ? 'text-amber-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
-           <Activity size={16} /> Demanda (Sob Demanda)
-           {activeTab === 'demand' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-full" />}
+      <div className="flex bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-fit mb-6 shadow-sm overflow-x-auto custom-scrollbar">
+        <button onClick={() => setActiveTab('demand')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'demand' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+           <Activity size={14} /> Demanda (Sob Demanda)
         </button>
-        <button onClick={() => setActiveTab('orders')} className={`flex items-center gap-2 pb-3 font-medium text-sm whitespace-nowrap transition-colors relative ${activeTab === 'orders' ? 'text-amber-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
-           <List size={16} /> Ordens de Produção
-           {activeTab === 'orders' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-full" />}
+        <button onClick={() => setActiveTab('orders')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'orders' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+           <List size={14} /> Ordens de Produção
         </button>
-        <button onClick={() => setActiveTab('greens')} className={`flex items-center gap-2 pb-3 font-medium text-sm whitespace-nowrap transition-colors relative ${activeTab === 'greens' ? 'text-amber-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
-           <Coffee size={16} /> Grãos Verdes
-           {activeTab === 'greens' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-full" />}
+        <button onClick={() => setActiveTab('greens')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'greens' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+           <Coffee size={14} /> Grãos Verdes
         </button>
-        <button onClick={() => setActiveTab('recipes')} className={`flex items-center gap-2 pb-3 font-medium text-sm whitespace-nowrap transition-colors relative ${activeTab === 'recipes' ? 'text-amber-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
-           <FileText size={16} /> Receitas
-           {activeTab === 'recipes' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-full" />}
+        <button onClick={() => setActiveTab('recipes')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'recipes' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+           <FileText size={14} /> Receitas
         </button>
-        <button onClick={() => setActiveTab('profiles')} className={`flex items-center gap-2 pb-3 font-medium text-sm whitespace-nowrap transition-colors relative ${activeTab === 'profiles' ? 'text-amber-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
-           <Beaker size={16} /> Perfis de Torra
-           {activeTab === 'profiles' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-full" />}
+        <button onClick={() => setActiveTab('profiles')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'profiles' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+           <Beaker size={14} /> Perfis de Torra
         </button>
-        <button onClick={() => setActiveTab('quality')} className={`flex items-center gap-2 pb-3 font-medium text-sm whitespace-nowrap transition-colors relative ${activeTab === 'quality' ? 'text-amber-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
-           <CheckCircle size={16} /> Qualidade (CQ)
-           {activeTab === 'quality' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-full" />}
+        <button onClick={() => setActiveTab('quality')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'quality' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+           <CheckCircle size={14} /> Qualidade (CQ)
         </button>
-        <button onClick={() => setActiveTab('traceability')} className={`flex items-center gap-2 pb-3 font-medium text-sm whitespace-nowrap transition-colors relative ${activeTab === 'traceability' ? 'text-amber-500' : 'text-zinc-500 hover:text-zinc-300'}`}>
-           <Activity size={16} /> Rastreabilidade
-           {activeTab === 'traceability' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 rounded-t-full" />}
+        <button onClick={() => setActiveTab('traceability')} className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === 'traceability' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'}`}>
+           <Activity size={14} /> Rastreabilidade
         </button>
       </div>
 

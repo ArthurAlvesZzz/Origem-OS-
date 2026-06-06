@@ -1,5 +1,6 @@
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
+import { Input } from '../components/ui/Input';
 import { Plus, Search, Edit2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { ProductFormDrawer } from '../components/catalog/ProductFormDrawer';
@@ -54,12 +55,10 @@ export function Catalogo() {
       />
 
       <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-          <input 
-            type="text" 
+        <div className="flex-1 w-full max-w-xl">
+          <Input 
+            icon={<Search size={18} className="text-zinc-500" />}
             placeholder="Buscar por nome ou SKU..." 
-            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-700"
           />
         </div>
       </div>

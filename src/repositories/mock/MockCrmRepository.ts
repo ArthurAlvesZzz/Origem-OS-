@@ -61,20 +61,55 @@ export class MockCrmRepository implements ICrmRepository {
       id: 'deal-1',
       pipelineId: 'pipeline-delivery',
       stageId: 'stg-del-1',
-      title: 'Aline - Pedido Bolo Pote',
+      title: 'Aline - Assinatura Mensal',
       value: 120,
       status: 'open',
       priority: 'normal',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      // Adding new custom properties from Phase 8A
       customDataJson: JSON.stringify({ flavor: 'Chocolate', deliveryTime: '14:30' })
     });
     this.deals.push({
       id: 'deal-2',
+      pipelineId: 'pipeline-delivery',
+      stageId: 'stg-del-2',
+      title: 'Pedro - 2 Cafés + Croissant',
+      value: 65,
+      status: 'open',
+      priority: 'high',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customDataJson: JSON.stringify({ items: 'Cafe Latte, Croissant' })
+    });
+    this.deals.push({
+      id: 'deal-3',
+      pipelineId: 'pipeline-delivery',
+      stageId: 'stg-del-3',
+      title: 'Lucas - Delivery Ifood',
+      value: 154,
+      status: 'open',
+      priority: 'normal',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customDataJson: JSON.stringify({ address: 'Av Paulista 1000' })
+    });
+    this.deals.push({
+      id: 'deal-4',
+      pipelineId: 'pipeline-delivery',
+      stageId: 'stg-del-4',
+      title: 'Mariana - Pacote Especial',
+      value: 200,
+      status: 'open',
+      priority: 'low',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customDataJson: JSON.stringify({})
+    });
+    this.deals.push({
+      id: 'deal-5',
       pipelineId: 'pipeline-encomendas',
       stageId: 'stg-enc-1',
-      title: 'Festa 50 pessoas',
+      title: 'Festa 50 pessoas (João)',
       value: 800,
       status: 'open',
       priority: 'high',
@@ -82,6 +117,88 @@ export class MockCrmRepository implements ICrmRepository {
       updatedAt: new Date().toISOString(),
       customDataJson: JSON.stringify({ eventDate: '2026-08-10', guestCount: 50, eventTheme: 'Floral' })
     });
+    this.deals.push({
+      id: 'deal-6',
+      pipelineId: 'pipeline-encomendas',
+      stageId: 'stg-enc-2',
+      title: 'Casamento 200 pessoas',
+      value: 4500,
+      status: 'open',
+      priority: 'high',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customDataJson: JSON.stringify({ eventDate: '2026-11-20', guestCount: 200 })
+    });
+    this.deals.push({
+      id: 'deal-7',
+      pipelineId: 'pipeline-encomendas',
+      stageId: 'stg-enc-3',
+      title: 'Aniversário Infantil (Carros)',
+      value: 1200,
+      status: 'open',
+      priority: 'normal',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customDataJson: JSON.stringify({ eventDate: '2026-06-25' })
+    });
+    this.deals.push({
+      id: 'deal-8',
+      pipelineId: 'pipeline-b2b',
+      stageId: 'stg-b2b-1',
+      title: 'Agência de Publicidade - Mensal',
+      value: 600,
+      status: 'open',
+      priority: 'normal',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customDataJson: JSON.stringify({ company: 'Agência XPTO' })
+    });
+    this.deals.push({
+      id: 'deal-9',
+      pipelineId: 'pipeline-b2b',
+      stageId: 'stg-b2b-2',
+      title: 'Empresa Tech - Fornecimento',
+      value: 1500,
+      status: 'open',
+      priority: 'high',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customDataJson: JSON.stringify({ company: 'Tech Solutions' })
+    });
+    this.deals.push({
+      id: 'deal-10',
+      pipelineId: 'pipeline-b2b',
+      stageId: 'stg-b2b-3',
+      title: 'Startup Local - Lanche 20x',
+      value: 800,
+      status: 'open',
+      priority: 'normal',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customDataJson: JSON.stringify({ company: 'Local Start' })
+    });
+    this.conversations.push({
+      id: 'conv-1',
+      customerId: 'cid-1',
+      channel: 'whatsapp_baileys',
+      status: 'open',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customerName: 'Aline Souza',
+      lastMessage: 'Oi, queria saber sobre as assinaturas de café',
+      unreadCount: 1
+    } as any);
+    this.conversations.push({
+      id: 'conv-2',
+      customerId: 'cid-2',
+      channel: 'whatsapp_baileys',
+      status: 'open',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      customerName: 'Empório Trindade',
+      lastMessage: 'Vcs entregam na zona sul?',
+      unreadCount: 3
+    } as any);
   }
 
   async getPipelines(): Promise<CrmPipelineRecord[]> {
@@ -285,7 +402,7 @@ export class MockCrmRepository implements ICrmRepository {
     if (saved) return JSON.parse(saved);
     return [
       { id: '1', name: 'Palavra-chave: Cardápio', trigger: 'keyword_cardapio', status: 'active', createdAt: new Date().toISOString() },
-      { id: '2', name: 'Palavra-chave: Bolo', trigger: 'keyword_bolo', status: 'active', createdAt: new Date().toISOString() },
+      { id: '2', name: 'Palavra-chave: Grãos', trigger: 'keyword_cafe', status: 'active', createdAt: new Date().toISOString() },
       { id: '3', name: 'Pós-venda Delivery (2h)', trigger: 'order_delivered', status: 'active', createdAt: new Date().toISOString() },
       { id: '4', name: 'Alerta VIP Retorno (15d)', trigger: 'vip_no_purchase', status: 'active', createdAt: new Date().toISOString() }
     ];

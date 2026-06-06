@@ -1,7 +1,10 @@
 import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Card, CardContent } from '../components/ui/Card';
+import { Input } from '../components/ui/Input';
+import { Plus, Search, Filter, ShoppingBag } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { NewSaleDrawer } from '../components/sales/NewSaleDrawer';
 import { useRepositories } from '../repositories/RepositoryProvider';
@@ -23,37 +26,32 @@ export function Comercial() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto" key={refreshKey}>
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500" key={refreshKey}>
       <PageHeader 
-        title="Comercial" 
-        description="Gestão de vendas, PDV e orçamentos." 
+        title="Comercial & PDV" 
+        description="Gestão de vendas, controle de caixa e histórico de pedidos B2B/B2C." 
         action={
-          <button 
-            onClick={() => setIsDrawerOpen(true)}
-            className="flex items-center gap-2 bg-zinc-50 text-zinc-950 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors"
-          >
+          <Button onClick={() => setIsDrawerOpen(true)} className="gap-2 shadow-lg shadow-amber-500/20">
             <Plus size={16} /> Nova Venda
-          </button>
+          </Button>
         }
       />
 
       {/* Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-          <input 
-            type="text" 
-            placeholder="Buscar pedido ou cliente..." 
-            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-zinc-700"
+      <div className="flex flex-col md:flex-row gap-4 mb-6 relative z-10 w-full sm:w-auto">
+        <div className="flex-1 w-full max-w-xl">
+          <Input 
+            icon={<Search size={18} className="text-zinc-500" />}
+            placeholder="Buscar pedido, cliente ou código..."
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm font-medium text-zinc-300 hover:text-zinc-50 transition-colors">
-          <Filter size={16} /> Filtros
-        </button>
+        <Button variant="outline" className="gap-2 sm:w-auto w-full justify-center">
+          <Filter size={16} className="text-zinc-500" /> Filtros
+        </Button>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-sm text-zinc-300">
             <thead className="text-xs uppercase bg-zinc-950/50 text-zinc-500 border-b border-zinc-800">
               <tr>
@@ -61,20 +59,22 @@ export function Comercial() {
                 <th className="px-6 py-4 font-medium">Data</th>
                 <th className="px-6 py-4 font-medium">Cliente</th>
                 <th className="px-6 py-4 font-medium text-right">Total</th>
-                <th className="px-6 py-4 font-medium">Status Comercial</th>
+                <th className="px-6 py-4 font-medium pl-8">Status Comercial</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-zinc-800/50">
               {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-zinc-800/50 transition-colors">
-                  <td className="px-6 py-4 font-mono text-zinc-50">{order.id}</td>
-                  <td className="px-6 py-4">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
-                  <td className="px-6 py-4 font-medium text-zinc-50">{order.customer}</td>
-                  <td className="px-6 py-4 text-emerald-400 font-medium text-right">R$ {order.total.toFixed(2)}</td>
+                <tr key={order.id} className="hover:bg-zinc-800/30 transition-colors group cursor-pointer">
                   <td className="px-6 py-4">
+                    <span className="font-mono text-zinc-100 group-hover:text-amber-500 transition-colors uppercase">{order.id.split('-').pop() || order.id}</span>
+                  </td>
+                  <td className="px-6 py-4">{new Date(order.date).toLocaleDateString('pt-BR')}</td>
+                  <td className="px-6 py-4 font-medium text-zinc-100">{order.customer}</td>
+                  <td className="px-6 py-4 text-emerald-500 font-medium text-right">R$ {order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  <td className="px-6 py-4 pl-8">
                     <StatusBadge 
                       status={order.status} 
-                      variant={order.status === 'Pago' ? 'success' : order.status === 'Parcial' ? 'info' : 'warning'} 
+                      variant={order.status === 'Pago' ? 'success' : order.status === 'Parcial' ? 'warning' : 'error'} 
                     />
                   </td>
                 </tr>
@@ -82,19 +82,21 @@ export function Comercial() {
               
               {orders.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-0">
+                  <td colSpan={5} className="p-0 border-none">
+                    <div className="py-16 flex items-center justify-center">
                     <EmptyState
-                      icon={<Search size={24} />}
-                      title="Nenhuma venda encontrada"
-                      description="Os pedidos registrados aparecerão nesta lista. Clique em Nova Venda para começar."
+                      icon={<ShoppingBag size={32} className="text-zinc-600" />}
+                      title="Nenhuma venda registrada"
+                      description="Nenhum pedido encontrado. Clique no botão Nova Venda acima para começar a registrar."
                     />
+                    </div>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {isDrawerOpen && (
         <NewSaleDrawer 

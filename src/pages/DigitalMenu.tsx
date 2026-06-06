@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../repositories/RepositoryProvider';
+import { safeFetch } from '../repositories/api/apiClient';
 import { DigitalMenuCategory, DigitalMenuConfig, DigitalMenuItem } from '../domain/digitalMenu';
 import { Order } from '../domain/types';
 import { PageHeader } from '../components/ui/PageHeader';
-import { QrCode, Link as LinkIcon, Plus, Store, Check, Target, Settings, Layers, Package, ShoppingBag } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Card, CardContent } from '../components/ui/Card';
+import { Input } from '../components/ui/Input';
+import { QrCode, Link as LinkIcon, Plus, Store, Target, Settings, Layers, Package, ShoppingBag, Edit, Copy } from 'lucide-react';
 import { StatusBadge } from '../components/ui/StatusBadge';
 
 export function DigitalMenu() {
@@ -79,11 +83,8 @@ export function DigitalMenu() {
 
   const checkMpStatus = async () => {
     try {
-      const res = await fetch('/api/payments/mercadopago/status', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('AUTH_TOKEN')}` }
-      });
-      const data = await res.json();
-      if (data.connected !== undefined) setMpStatus(data);
+      const res = await safeFetch('/api/payments/mercadopago/status');
+      if (res.connected !== undefined) setMpStatus(res);
     } catch(e) {}
   };
 
@@ -121,44 +122,45 @@ export function DigitalMenu() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-zinc-500">Carregando Cardápio Digital...</div>;
+    return <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando Cardápio Digital...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500 p-4 md:p-8">
       <PageHeader
-        title="Cardápio Digital"
-        description="Gerencie seu cardápio público e pedidos online"
+        title="Cardápio Digital & B2C"
+        description="Gerencie seu cardápio público, vendas online e recepcionamento via KDS."
         action={
-          <button 
+          <Button 
             onClick={() => window.open(`/menu/${config?.slug || 'demo'}`, '_blank')}
-            className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-50 px-4 py-2 rounded-lg font-medium transition-colors"
+            variant="outline"
+            className="gap-2 border-zinc-700 bg-zinc-900 shadow-lg"
           >
-            <Store size={18} />
-            Ver Cardápio
-          </button>
+            <Store size={16} className="text-amber-500" />
+            Visitar Loja
+          </Button>
         }
       />
 
       {/* Tabs */}
-      <div className="flex bg-zinc-900 overflow-x-auto p-1 border border-zinc-800/50 rounded-xl max-w-fit">
+      <div className="flex bg-zinc-950 p-1.5 rounded-xl border border-zinc-800/80 w-full md:w-fit mb-6 shadow-sm overflow-x-auto custom-scrollbar">
          {[
            { id: 'overview', label: 'Visão Geral', icon: Target },
+           { id: 'orders', label: 'KDS', icon: ShoppingBag },
            { id: 'categories', label: 'Categorias', icon: Layers },
-           { id: 'items', label: 'Itens', icon: Package },
-           { id: 'orders', label: 'Pedidos', icon: ShoppingBag },
-           { id: 'settings', label: 'Configurações', icon: Settings },
+           { id: 'items', label: 'Produtos', icon: Package },
+           { id: 'settings', label: 'Ajustes', icon: Settings },
          ].map(tab => (
            <button
              key={tab.id}
              onClick={() => setActiveTab(tab.id as any)}
-             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+             className={`whitespace-nowrap px-4 py-2 rounded-lg text-sm font-semibold transition-all flex flex-none items-center gap-2 ${
                activeTab === tab.id
-                 ? 'bg-zinc-800 text-amber-500 shadow-sm'
+                 ? 'bg-zinc-800 text-zinc-100 shadow-sm'
                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
              }`}
            >
-             <tab.icon size={16} />
+             <tab.icon size={14} />
              {tab.label}
            </button>
          ))}
@@ -167,59 +169,59 @@ export function DigitalMenu() {
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
-            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl relative overflow-hidden">
-               <div className="relative z-10 flex flex-col items-start gap-4">
+            <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl relative overflow-hidden shadow-xl shadow-black/20">
+               <div className="absolute top-0 right-0 p-32 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+               <div className="relative z-10 flex flex-col items-start gap-5">
                  <div className="flex items-center gap-3">
-                   <div className={`w-3 h-3 rounded-full ${config?.isOpen ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-                   <h3 className="text-xl font-heading font-medium text-zinc-50">{config?.publicName || 'Cardápio Digital'}</h3>
+                   <div className={`w-3 h-3 rounded-full ${config?.isOpen ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]' : 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)]'} animate-pulse`}></div>
+                   <h3 className="text-2xl font-heading font-medium text-zinc-50 tracking-tight">{config?.publicName || 'Seu Cardápio'}</h3>
                  </div>
                  
-                 <p className="text-zinc-400 text-sm max-w-md">
-                   Seu cardápio está {config?.isOpen ? 'aberto para receber pedidos' : 'fechado temporariamente'}. 
-                   Compartilhe o link abaixo com seus clientes.
+                 <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
+                   Seu cardápio está {config?.isOpen ? <strong className="text-emerald-400 font-medium">ABERTO</strong> : <strong className="text-red-400 font-medium">FECHADO</strong>}. {config?.isOpen ? 'Compartilhe o link abaixo com seus clientes para receber pedidos.' : 'Ative para começar a receber novos pedidos online.'}
                  </p>
                  
-                 <div className="flex items-center gap-2 w-full max-w-sm mt-2">
-                   <div className="flex-1 bg-zinc-950 border border-zinc-800 text-zinc-300 px-3 py-2 rounded-lg font-mono text-sm truncate">
-                     {window.location.host}/menu/{config?.slug || 'demo'}
-                   </div>
-                   <button onClick={copyLink} className="p-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors">
-                     <LinkIcon size={18} />
-                   </button>
+                 <div className="flex items-center gap-2 w-full max-w-md mt-2 relative">
+                   <input
+                     readOnly
+                     value={`${window.location.host}/menu/${config?.slug || 'demo'}`}
+                     className="flex-1 bg-zinc-950 border border-zinc-800 text-zinc-300 px-4 py-2.5 rounded-xl font-mono text-xs tracking-wide truncate focus:outline-none focus:border-zinc-700"
+                   />
+                   <Button variant="secondary" onClick={copyLink} className="p-2.5 aspect-square">
+                     <Copy size={16} className="text-zinc-400" />
+                   </Button>
                  </div>
 
                  <div className="flex gap-3 mt-4">
-                   <button 
-                     onClick={() => updateConfigStatus(!config?.isOpen)}
-                     className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                       config?.isOpen 
-                         ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' 
-                         : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                     }`}
-                   >
-                     {config?.isOpen ? 'Pausar Pedidos' : 'Abrir Cardápio'}
-                   </button>
+                    <Button 
+                      variant={config?.isOpen ? "outline" : "primary"}
+                      onClick={() => updateConfigStatus(!config?.isOpen)}
+                    >
+                      {config?.isOpen ? 'Pausar Recebimentos' : 'Abrir Cardápio'}
+                    </Button>
                  </div>
                </div>
             </div>
           </div>
 
           <div className="space-y-4">
-             <div className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5">
-               <h3 className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-4">Métricas Hoje</h3>
-               <div className="space-y-4">
-                 <div className="flex justify-between items-center">
-                   <span className="text-zinc-300 text-sm">Pedidos Totais</span>
-                   <span className="text-zinc-50 font-medium">{orders.length}</span>
+             <Card>
+               <CardContent className="p-6">
+                 <h3 className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-5">Métricas de Vendas (Hoje)</h3>
+                 <div className="space-y-5">
+                   <div className="flex justify-between items-center group">
+                     <span className="text-zinc-500 font-medium text-sm group-hover:text-zinc-300 transition-colors">Tickets Processados</span>
+                     <span className="text-zinc-50 font-medium text-lg bg-zinc-800 px-3 py-1 rounded-lg">{orders.length}</span>
+                   </div>
+                   <div className="flex justify-between items-center group">
+                     <span className="text-zinc-500 font-medium text-sm group-hover:text-zinc-300 transition-colors">Faturamento Web</span>
+                     <span className="text-amber-500 font-medium font-mono text-xl">
+                       R$ {orders.reduce((acc, o) => acc + o.total, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                     </span>
+                   </div>
                  </div>
-                 <div className="flex justify-between items-center">
-                   <span className="text-zinc-300 text-sm">Faturamento</span>
-                   <span className="text-amber-500 font-medium font-mono">
-                     R$ {orders.reduce((acc, o) => acc + o.total, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                   </span>
-                 </div>
-               </div>
-             </div>
+               </CardContent>
+             </Card>
           </div>
         </div>
       )}
@@ -353,245 +355,277 @@ export function DigitalMenu() {
       )}
 
       {activeTab === 'categories' && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden p-6">
-          <h3 className="font-medium text-zinc-50 mb-4">Categorias do Cardápio</h3>
-          <p className="text-zinc-400 text-sm mb-6">Cadastre as categorias para organizar seu cardápio (ex: Bebidas, Lanches)</p>
-          <div className="divide-y divide-zinc-800">
-            {categories.map(c => (
-              <div key={c.id} className="py-3 flex justify-between items-center text-sm">
-                <span className="text-zinc-300 font-medium">{c.name}</span>
-                <span className="text-zinc-500 text-xs px-2 py-1 bg-zinc-800 rounded">{c.active ? 'Ativa' : 'Inativa'}</span>
-              </div>
-            ))}
+        <Card>
+          <div className="p-6">
+            <h3 className="font-heading font-medium text-zinc-50 text-lg mb-1">Classificação do Cardápio</h3>
+            <p className="text-zinc-400 text-sm mb-6">Cadastre e organize as categorias do seu catálogo público de vendas (ex: Bebidas Frias, Lanches Quentes).</p>
+            <div className="divide-y divide-zinc-800/50 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/20">
+              {categories.map(c => (
+                <div key={c.id} className="p-4 flex justify-between items-center text-sm hover:bg-zinc-800/30 transition-colors group">
+                  <span className="text-zinc-300 font-medium group-hover:text-zinc-50 transition-colors">{c.name}</span>
+                  <div className="flex items-center gap-3">
+                    <StatusBadge status={c.active ? 'Ativa' : 'Oculta'} variant={c.active ? 'success' : 'default'} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {activeTab === 'items' && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden p-6">
-          <h3 className="font-medium text-zinc-50 mb-4">Itens do Cardápio</h3>
-          <p className="text-zinc-400 text-sm mb-6">Produtos disponíveis para venda online.</p>
-          <div className="divide-y divide-zinc-800">
-            {items.map(i => (
-              <div key={i.id} className="py-3 flex justify-between items-center text-sm">
-                <div className="flex flex-col">
-                  <span className="text-zinc-300 font-medium">{i.name}</span>
-                  <span className="text-zinc-500 text-xs">R$ {i.price.toFixed(2)}</span>
+        <Card>
+          <div className="p-6">
+            <h3 className="font-heading font-medium text-zinc-50 text-lg mb-1">Catálogo de Produtos</h3>
+            <p className="text-zinc-400 text-sm mb-6">Gerencie preços, disponibilidade e atributos configuráveis para venda online.</p>
+            <div className="divide-y divide-zinc-800/50 border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950/20">
+              {items.map(i => (
+                <div key={i.id} className="p-4 flex justify-between items-center text-sm hover:bg-zinc-800/30 transition-colors group">
+                  <div className="flex flex-col">
+                    <span className="text-zinc-300 font-medium group-hover:text-zinc-50 transition-colors">{i.name}</span>
+                    <span className="text-amber-500 font-mono text-xs mt-1">R$ {i.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                      <StatusBadge status={i.active ? 'Listado' : 'Oculto'} variant={i.active ? 'success' : 'default'} />
+                      <Button variant="outline" size="sm" onClick={() => openModifierModal(i)} className="text-amber-500 hover:text-amber-400 py-1 px-3 border-amber-500/20 bg-amber-500/5 h-auto">
+                          Configurar Adicionais
+                      </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <span className="text-zinc-500 text-xs px-2 py-1 bg-zinc-800 rounded">{i.active ? 'Ativo' : 'Inativo'}</span>
-                    <button onClick={() => openModifierModal(i)} className="text-xs text-amber-500 hover:text-amber-400 font-medium border border-amber-500/30 px-3 py-1.5 rounded-lg transition-colors bg-amber-500/10">
-                        Adicionais/Opções
-                    </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {activeTab === 'settings' && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden p-6">
-          <h3 className="font-medium text-zinc-50 mb-4">Configurações Base</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs text-zinc-400 mb-1">Nome Público</label>
-                <input type="text" value={config?.publicName || ''} onChange={(e) => setConfig(prev => prev ? {...prev, publicName: e.target.value} : null)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-300 text-sm focus:border-amber-500 focus:outline-none" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+        <Card>
+          <div className="p-6">
+            <h3 className="font-heading font-medium text-zinc-50 text-lg mb-6">Parametrização do Cardápio</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-[1000px]">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-xs text-zinc-400 mb-1">Taxa Entrega Padrão (R$)</label>
-                  <input type="number" step="0.01" value={config?.deliveryFee || 0} onChange={(e) => setConfig(prev => prev ? {...prev, deliveryFee: parseFloat(e.target.value)} : null)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-300 text-sm focus:border-amber-500 focus:outline-none" />
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Nome Público da Loja</label>
+                  <Input 
+                    value={config?.publicName || ''} 
+                    onChange={(e) => setConfig(prev => prev ? {...prev, publicName: e.target.value} : null)}
+                    placeholder="Ex: Cofcof.co - Centro" 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Taxa Entrega Padrão</label>
+                    <Input 
+                       type="number" step="0.01" 
+                       value={config?.deliveryFee || 0} 
+                       onChange={(e) => setConfig(prev => prev ? {...prev, deliveryFee: parseFloat(e.target.value)} : null)} 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Pedido Minímo</label>
+                    <Input 
+                       type="number" step="0.01" 
+                       value={config?.minimumOrder || 0} 
+                       onChange={(e) => setConfig(prev => prev ? {...prev, minimumOrder: parseFloat(e.target.value)} : null)} 
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Preparo Est. (min)</label>
+                    <Input 
+                       type="number" 
+                       value={config?.estimatedPrepMinutes || 0} 
+                       onChange={(e) => setConfig(prev => prev ? {...prev, estimatedPrepMinutes: parseInt(e.target.value, 10)} : null)} 
+                    />
+                  </div>
+                  <div className="pt-6">
+                    <label className="flex items-center gap-3 cursor-pointer group p-2 rounded-lg hover:bg-zinc-800/30 transition-colors">
+                      <div className="relative">
+                        <input type="checkbox" className="sr-only" checked={config?.allowOrdersOutsideHours || false} onChange={e => setConfig(prev => prev ? {...prev, allowOrdersOutsideHours: e.target.checked} : null)} />
+                        <div className={`block w-10 h-6 rounded-full transition-colors ${config?.allowOrdersOutsideHours ? 'bg-amber-500' : 'bg-zinc-700'}`}></div>
+                        <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${config?.allowOrdersOutsideHours ? 'transform translate-x-4' : ''}`}></div>
+                      </div>
+                      <span className="text-sm font-medium text-zinc-300 group-hover:text-zinc-100">Modo Teste/Offline</span>
+                    </label>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-xs text-zinc-400 mb-1">Pedido Min (R$)</label>
-                  <input type="number" step="0.01" value={config?.minimumOrder || 0} onChange={(e) => setConfig(prev => prev ? {...prev, minimumOrder: parseFloat(e.target.value)} : null)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-300 text-sm focus:border-amber-500 focus:outline-none" />
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Áreas de Entrega (JSON)</label>
+                  <textarea 
+                    value={config?.deliveryZonesJson || ''} 
+                    onChange={(e) => setConfig(prev => prev ? {...prev, deliveryZonesJson: e.target.value} : null)} 
+                    placeholder='[{"name": "Centro", "fee": 5.0, "active": true}]'
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-300 font-mono text-xs focus:border-amber-500 focus:outline-none h-32 custom-scrollbar resize-none placeholder:text-zinc-700" 
+                  />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-zinc-400 mb-1">Preparo (min)</label>
-                  <input type="number" value={config?.estimatedPrepMinutes || 0} onChange={(e) => setConfig(prev => prev ? {...prev, estimatedPrepMinutes: parseInt(e.target.value, 10)} : null)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-300 text-sm focus:border-amber-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs text-zinc-400 mb-1">Modo Offline / Teste</label>
-                  <label className="flex items-center gap-2 mt-2 w-full text-zinc-300 text-sm cursor-pointer">
-                    <input type="checkbox" checked={config?.allowOrdersOutsideHours || false} onChange={e => setConfig(prev => prev ? {...prev, allowOrdersOutsideHours: e.target.checked} : null)} className="rounded border-zinc-700 bg-zinc-900 focus:ring-amber-500" />
-                    <span>Habilitar testes mesmo fechado</span>
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-zinc-400 mb-1">Áreas de Entrega (JSON Avançado)</label>
-                <textarea 
-                  value={config?.deliveryZonesJson || ''} 
-                  onChange={(e) => setConfig(prev => prev ? {...prev, deliveryZonesJson: e.target.value} : null)} 
-                  placeholder='[{"name": "Centro", "fee": 5.0, "active": true}]'
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-300 font-mono text-xs focus:border-amber-500 focus:outline-none h-24 resize-none" 
-                />
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs text-zinc-400 mb-1">Provedor de Pagamento</label>
-                <select value={config?.paymentProvider || 'manual_pix'} onChange={(e) => setConfig(prev => prev ? {...prev, paymentProvider: e.target.value} : null)} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-300 text-sm focus:border-amber-500 focus:outline-none">
-                  <option value="manual_pix">PIX Manual / Offline</option>
-                  <option value="mercadopago">Mercado Pago (Checkout Pro)</option>
-                </select>
-              </div>
-              
-              {(!config?.paymentProvider || config.paymentProvider === 'manual_pix') ? (
-                <div>
-                  <label className="block text-xs text-zinc-400 mb-1">Chave PIX Manual</label>
-                  <input type="text" value={config?.pixKeyManual || ''} onChange={(e) => setConfig(prev => prev ? {...prev, pixKeyManual: e.target.value} : null)} placeholder="ex: CNPJ, Email ou Celular" className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-300 text-sm focus:border-amber-500 focus:outline-none" />
-                  <p className="text-[10px] text-zinc-500 mt-1">Esta chave será exibida para o cliente copiar e colar. A baixa é manual.</p>
-                </div>
-              ) : (
-                <div className="p-4 bg-zinc-950 border border-amber-900/30 rounded-lg">
-                  <p className="text-sm text-zinc-300 mb-2 font-medium flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-500"></div> Mercago Pago Checkout Pro
-                  </p>
+              <div className="space-y-5">
+                <div className="bg-zinc-950/50 p-5 rounded-2xl border border-zinc-800">
+                  <h4 className="text-sm font-medium text-zinc-100 mb-4 flex items-center gap-2"><Store size={16} className="text-amber-500" /> Gateway de Pagamento</h4>
+                  <div className="mb-4">
+                    <select value={config?.paymentProvider || 'manual_pix'} onChange={(e) => setConfig(prev => prev ? {...prev, paymentProvider: e.target.value} : null)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-300 text-sm focus:border-amber-500 focus:outline-none appearance-none">
+                      <option value="manual_pix">PIX Manual (Validação Humana)</option>
+                      <option value="mercadopago">Mercado Pago (Cartão & PIX Dinâmico)</option>
+                    </select>
+                  </div>
                   
-                  {mpStatus?.status === 'not_configured' || mpStatus?.status === 'disconnected' ? (
-                    <div className="mt-2 space-y-3">
-                      <p className="text-xs text-zinc-400">Conta não conectada. Permite receber cartões e PIX dinâmico.</p>
-                      <button 
-                         onClick={async () => {
-                           try {
-                             const res = await fetch('/api/payments/mercadopago/connect-url', { headers: { 'Authorization': `Bearer ${localStorage.getItem('AUTH_TOKEN')}` }});
-                             const data = await res.json();
-                             if (data.url) window.location.href = data.url;
-                             else if (data.error) alert(`Erro: ${data.message || data.error}`);
-                           } catch(e) { alert('Erro ao iniciar conexão.'); }
-                         }}
-                         className="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                      >
-                         Conectar Integrador
-                      </button>
-                    </div>
-                  ) : mpStatus?.status === 'missing_encryption_key' ? (
-                     <div className="mt-2 space-y-3">
-                        <p className="text-xs text-red-400 font-medium tracking-wide uppercase">Falha de Segurança no Servidor</p>
-                        <p className="text-xs text-zinc-400">A chave de criptografia de pagamentos não está configurada no servidor. Por segurança, a integração Mercado Pago está desabilitada.</p>
-                     </div>
-                  ) : mpStatus?.connected ? (
-                    <div className="mt-2 space-y-2">
-                      <p className="text-xs text-emerald-500 font-medium tracking-wide uppercase">
-                        Conectado ({mpStatus.mode}) 
-                        {mpStatus.status === 'token_expiring' && <span className="text-amber-500 ml-2">⚠️ Expirando</span>}
-                        {mpStatus.status === 'expired' && <span className="text-red-500 ml-2">⚠️ Expirado</span>}
-                      </p>
-                      <button 
-                        onClick={() => {
-                          fetch('/api/payments/mercadopago/disconnect', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('AUTH_TOKEN')}` }})
-                            .then(() => checkMpStatus());
-                        }}
-                        className="text-xs text-red-400 underline hover:text-red-300"
-                      >
-                        Desconectar Conta
-                      </button>
+                  {(!config?.paymentProvider || config.paymentProvider === 'manual_pix') ? (
+                    <div className="pt-2 border-t border-zinc-800">
+                      <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 mt-2">Chave PIX Loja</label>
+                      <Input 
+                        value={config?.pixKeyManual || ''} 
+                        onChange={(e) => setConfig(prev => prev ? {...prev, pixKeyManual: e.target.value} : null)} 
+                        placeholder="Insira o CPF/CNPJ, E-mail ou Celular" 
+                      />
+                      <p className="text-[10px] text-zinc-500 mt-2 font-medium leading-relaxed">Instrução: Os clientes verão esta chave no fim do checkout e necessitarão enviar comprovante manualmente.</p>
                     </div>
                   ) : (
-                    <div className="mt-2"><p className="text-xs text-zinc-500">Carregando status...</p></div>
+                    <div className="pt-4 border-t border-zinc-800">
+                      {mpStatus?.status === 'not_configured' || mpStatus?.status === 'disconnected' ? (
+                        <div className="space-y-3">
+                          <p className="text-xs text-zinc-400 leading-relaxed font-medium">A conta financeira não está conectada. O checkout Mercado Pago está pausado no storefront.</p>
+                          <Button 
+                             onClick={async () => {
+                               try {
+                                 const data = await safeFetch('/api/payments/mercadopago/connect-url');
+                                 if (data.url) window.location.href = data.url;
+                                 else if (data.error) alert(`Erro: ${data.message || data.error}`);
+                               } catch(e) { alert('Erro ao iniciar conexão.'); }
+                             }}
+                             className="w-full justify-center bg-[#009EE3] hover:bg-[#008ACB] text-white"
+                          >
+                             Conectar Mercado Pago
+                          </Button>
+                        </div>
+                      ) : mpStatus?.status === 'missing_encryption_key' ? (
+                         <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl space-y-2">
+                            <p className="text-xs text-red-400 font-bold tracking-wide uppercase flex items-center gap-2">⚠️ Risco de Segurança Acionado</p>
+                            <p className="text-[11px] text-red-300/80 leading-relaxed">Variável de criptografia de cofre ausente no backend. Para mitigar riscos vazamentos a integração transacional financeira foi automaticamente bloqueada.</p>
+                         </div>
+                      ) : mpStatus?.connected ? (
+                        <div className="bg-[#009EE3]/10 border border-[#009EE3]/20 p-4 rounded-xl space-y-3 mt-2">
+                          <div className="flex items-center justify-between">
+                             <p className="text-xs text-[#009EE3] font-bold tracking-wide uppercase flex items-center gap-2">
+                               <div className="w-2 h-2 rounded-full bg-[#009EE3] animate-pulse"></div> Conectado Seguro
+                             </p>
+                             <span className="text-[10px] bg-[#009EE3]/20 text-[#009EE3] px-2 py-0.5 rounded font-mono uppercase">{mpStatus.mode}</span>
+                          </div>
+                          
+                          {mpStatus.status === 'token_expiring' && <p className="text-[11px] text-amber-500 font-medium">⚠️ A credencial irá expirar em breve, favor re-autenticar.</p>}
+                          {mpStatus.status === 'expired' && <p className="text-[11px] text-red-500 font-medium">⚠️ A credencial expirou. Risco de falha no checkout.</p>}
+                          
+                          <button 
+                            onClick={() => {
+                              safeFetch('/api/payments/mercadopago/disconnect', { method: 'POST' })
+                                .then(() => checkMpStatus())
+                                .catch(e => alert('Erro ao desconectar'));
+                            }}
+                            className="text-[10px] text-red-400/80 hover:text-red-400 font-medium underline uppercase mt-2 pt-2 border-t border-[#009EE3]/20 w-full text-left"
+                          >
+                            Revogar Autorização de Acesso (Desconectar)
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="py-2"><p className="text-xs text-zinc-500">Autenticando cofre...</p></div>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-              
-              <div className="pt-4 border-t border-zinc-800">
-                <button 
-                  onClick={() => config && digitalMenuRepo.updateConfig(config).then(res => alert('Salvo!'))}
-                  className="bg-amber-600 hover:bg-amber-500 text-amber-50 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
-                >
-                  Salvar Configurações
-                </button>
+                
+                <div className="pt-6 flex justify-end">
+                  <Button 
+                    onClick={() => config && digitalMenuRepo.updateConfig(config).then(res => alert('Salvo!'))}
+                    className="w-full sm:w-auto"
+                  >
+                    Publicar Alterações
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Modifier Modal */}
       {modifierModalOpen && activeItemForMod && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/80 p-4">
-              <div className="bg-zinc-900 w-full max-w-2xl rounded-2xl border border-zinc-800 overflow-hidden flex flex-col max-h-[90vh]">
-                  <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm p-4">
+              <div className="bg-zinc-950 w-full max-w-2xl rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+                  <div className="p-6 border-b border-zinc-800/50 flex items-center justify-between">
                       <div>
-                          <h2 className="text-xl font-heading font-medium text-zinc-50">Adicionais: {activeItemForMod.name}</h2>
-                          <p className="text-sm text-zinc-400 mt-1">Configure os modificadores para este item (ex: ponto da carne, acompanhamentos).</p>
+                          <h2 className="text-xl font-heading font-medium text-zinc-50">Adicionais: <span className="text-amber-500">{activeItemForMod.name}</span></h2>
+                          <p className="text-sm text-zinc-400 mt-1">Configure variações e adicionais para forçar fluidez no PDV Web.</p>
                       </div>
-                      <button onClick={() => setModifierModalOpen(false)} className="text-zinc-500 hover:text-zinc-300">
+                      <button onClick={() => setModifierModalOpen(false)} className="text-zinc-500 hover:text-zinc-300 p-2 rounded-full hover:bg-zinc-800 transition-colors">
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                       </button>
                   </div>
                   
-                  <div className="flex-1 overflow-y-auto p-5 bg-zinc-950/50">
+                  <div className="flex-1 overflow-y-auto p-6 bg-zinc-900/50 custom-scrollbar">
                       {loadingMods ? (
-                          <div className="text-sm text-amber-500 flex justify-center py-8">Carregando grupos...</div>
+                          <div className="text-sm text-amber-500 flex justify-center py-8 font-medium animate-pulse">Autenticando repositório...</div>
                       ) : (
                           <div className="space-y-6">
                               {activeItemMods.length === 0 ? (
-                                  <div className="text-center py-10 border border-dashed border-zinc-700 rounded-xl bg-zinc-900/50">
-                                      <p className="text-sm text-zinc-400 mb-4">Nenhum adicional configurado para este item.</p>
-                                      <button onClick={addModifierGroup} className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-2">
-                                          <Plus size={16} /> Criar Primeiro Grupo
-                                      </button>
+                                  <div className="text-center py-12 px-6 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-950/50">
+                                      <p className="text-sm text-zinc-400 mb-6 font-medium">Nenhuma matriz de configuração definida.</p>
+                                      <Button onClick={addModifierGroup} className="gap-2 shadow-lg shadow-amber-500/10">
+                                          <Plus size={16} /> Inicializar Novo Grupo
+                                      </Button>
                                   </div>
                               ) : (
                                   <>
                                       {activeItemMods.map(group => (
-                                          <div key={group.id} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                                              <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-800/30">
+                                          <div key={group.id} className="bg-zinc-950 border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm">
+                                              <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 bg-zinc-900/30">
                                                   <div>
-                                                      <h3 className="font-medium text-zinc-100">{group.name}</h3>
-                                                      <p className="text-[11px] text-zinc-400 uppercase tracking-widest mt-1">Mínimo: {group.minSelections} | Máximo: {group.maxSelections}</p>
+                                                      <h3 className="font-semibold text-zinc-100">{group.name}</h3>
+                                                      <p className="text-[10px] text-zinc-500 font-mono tracking-widest mt-1 uppercase">Limites: Min {group.minSelections} - Max {group.maxSelections}</p>
                                                   </div>
-                                                  <div className="flex items-center gap-2">
-                                                      <button 
-                                                          className="text-xs px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"
-                                                          onClick={async () => {
-                                                              if(confirm('Remover grupo e todas opções?')) {
-                                                                  await digitalMenuRepo.deleteModifierGroup(group.id);
-                                                                  setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod.id));
-                                                              }
-                                                          }}
-                                                      >Remover</button>
-                                                  </div>
+                                                  <Button 
+                                                      variant="danger" size="sm"
+                                                      onClick={async () => {
+                                                          if(confirm('Atenção operação destrutiva: Remover grupo de modificador?')) {
+                                                              await digitalMenuRepo.deleteModifierGroup(group.id);
+                                                              setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod.id));
+                                                          }
+                                                      }}
+                                                  >Dropar Grupo</Button>
                                               </div>
-                                              <div className="p-4 space-y-2">
+                                              <div className="p-4 space-y-3">
                                                   {group.options && group.options.map((opt:any) => (
-                                                      <div key={opt.id} className="flex justify-between items-center bg-zinc-950 py-2 px-3 rounded-lg border border-zinc-800/50">
-                                                          <span className="text-sm text-zinc-300">{opt.name}</span>
-                                                          <div className="flex items-center gap-4">
-                                                              <span className="text-xs font-mono text-zinc-500">R$ {opt.price.toFixed(2)}</span>
+                                                      <div key={opt.id} className="flex justify-between items-center bg-zinc-900/50 py-2.5 px-4 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors">
+                                                          <span className="text-sm font-medium text-zinc-300">{opt.name}</span>
+                                                          <div className="flex items-center gap-6">
+                                                              <span className="text-xs font-mono font-medium text-amber-500">R$ {opt.price.toFixed(2)}</span>
                                                               <button onClick={async () => {
                                                                   await digitalMenuRepo.deleteModifierOption(opt.id);
                                                                   setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod.id));
-                                                              }} className="text-xs text-red-500 hover:text-red-400">Excluir</button>
+                                                              }} className="text-xs text-red-500 hover:text-red-400 font-medium uppercase tracking-wider">Del</button>
                                                           </div>
                                                       </div>
                                                   ))}
-                                                  <button onClick={() => addModifierOption(group.id)} className="w-full mt-2 py-2 border border-dashed border-zinc-700 hover:border-amber-500 hover:text-amber-500 text-zinc-500 rounded-lg text-sm transition-colors flex justify-center items-center gap-2">
-                                                      <Plus size={16} /> Adicionar Opção
+                                                  <button onClick={() => addModifierOption(group.id)} className="w-full mt-3 py-3 border border-dashed border-zinc-800 hover:border-amber-500 text-zinc-500 hover:text-amber-500 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 font-medium bg-zinc-950/20 hover:bg-amber-500/5">
+                                                      <Plus size={16} /> Incluir Opção
                                                   </button>
                                               </div>
                                           </div>
                                       ))}
                                       
-                                      <button onClick={addModifierGroup} className="w-full py-4 border border-zinc-800 hover:border-amber-500 hover:bg-amber-500/5 text-zinc-400 hover:text-amber-500 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 font-medium">
-                                          <Plus size={18} /> Novo Grupo de Adicionais
+                                      <button onClick={addModifierGroup} className="w-full py-4 border border-zinc-800 hover:border-amber-500 hover:bg-amber-500/5 text-zinc-400 hover:text-amber-500 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 font-medium shadow-sm">
+                                          <Plus size={18} /> Alocar Novo Grupo
                                       </button>
                                   </>
                               )}
                           </div>
                       )}
                   </div>
-                  <div className="p-5 border-t border-zinc-800 flex justify-end">
-                      <button onClick={() => setModifierModalOpen(false)} className="bg-amber-600 hover:bg-amber-500 text-amber-50 px-6 py-2 rounded-lg font-medium text-sm transition-colors">
-                          Fechar
-                      </button>
+                  <div className="p-6 border-t border-zinc-800/50 bg-zinc-950 flex justify-end">
+                      <Button onClick={() => setModifierModalOpen(false)}>
+                          Concluído
+                      </Button>
                   </div>
               </div>
           </div>

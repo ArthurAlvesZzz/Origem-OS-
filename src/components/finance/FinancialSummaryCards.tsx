@@ -14,53 +14,53 @@ export function FinancialSummaryCards({ refreshKey }: { refreshKey?: number }) {
   if (!summary) return null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div className="bg-zinc-900 border border-zinc-800 hover:border-emerald-500/30 p-5 rounded-2xl relative overflow-hidden group transition-all">
-         <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
-         <div className="flex items-center justify-between mb-4 relative z-10">
-            <div className="flex items-center gap-2">
-               <div className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg"><DollarSign size={16} /></div>
-               <span className="text-sm font-medium text-zinc-400">Caixa Atual</span>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div className="bg-zinc-950 border border-zinc-800/80 hover:border-emerald-500/30 p-6 rounded-xl relative overflow-hidden group transition-all duration-300 shadow-sm">
+         <div className="absolute -right-4 -top-4 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500"></div>
+         <div className="flex items-center justify-between mb-5 relative z-10">
+            <div className="flex items-center gap-2.5">
+               <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-lg shadow-sm"><DollarSign size={18} /></div>
+               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Caixa Atual</span>
             </div>
          </div>
          <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">R$ {summary.saldoEstimado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-         <div className="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1 relative z-10"><TrendingUp size={12}/> Dinheiro Realizado</div>
+         <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 mt-3 flex items-center gap-1.5 relative z-10"><TrendingUp size={14}/> Dinheiro Realizado</div>
       </div>
       
-      <div className="bg-zinc-900 border border-zinc-800 hover:border-sky-500/30 p-5 rounded-2xl relative overflow-hidden group transition-all">
-         <div className="absolute -right-4 -top-4 w-24 h-24 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all"></div>
-         <div className="flex items-center justify-between mb-4 relative z-10">
-            <div className="flex items-center gap-2">
-               <div className="p-2 bg-sky-500/10 text-sky-500 rounded-lg"><ArrowUpRight size={16} /></div>
-               <span className="text-sm font-medium text-zinc-400">A Receber</span>
+      <div className="bg-zinc-950 border border-zinc-800/80 hover:border-sky-500/30 p-6 rounded-xl relative overflow-hidden group transition-all duration-300 shadow-sm">
+         <div className="absolute -right-4 -top-4 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl group-hover:bg-sky-500/10 transition-all duration-500"></div>
+         <div className="flex items-center justify-between mb-5 relative z-10">
+            <div className="flex items-center gap-2.5">
+               <div className="p-2 bg-sky-500/10 border border-sky-500/20 text-sky-500 rounded-lg shadow-sm"><ArrowUpRight size={18} /></div>
+               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">A Receber</span>
             </div>
          </div>
          <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">R$ {summary.receitaPendente.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-         <div className="text-xs font-medium text-sky-500 mt-2 flex items-center gap-1 relative z-10">Previsto Futuro</div>
+         <div className="text-[11px] font-bold uppercase tracking-wider text-sky-500 mt-3 flex items-center gap-1.5 relative z-10">Previsto Futuro</div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 hover:border-red-500/30 p-5 rounded-2xl relative overflow-hidden group transition-all">
-         <div className="absolute -right-4 -top-4 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
-         <div className="flex items-center justify-between mb-4 relative z-10">
-            <div className="flex items-center gap-2">
-               <div className="p-2 bg-red-500/10 text-red-500 rounded-lg"><ArrowDownRight size={16} /></div>
-               <span className="text-sm font-medium text-zinc-400">Contas a Pagar</span>
+      <div className="bg-zinc-950 border border-zinc-800/80 hover:border-red-500/30 p-6 rounded-xl relative overflow-hidden group transition-all duration-300 shadow-sm">
+         <div className="absolute -right-4 -top-4 w-32 h-32 bg-red-500/5 rounded-full blur-2xl group-hover:bg-red-500/10 transition-all duration-500"></div>
+         <div className="flex items-center justify-between mb-5 relative z-10">
+            <div className="flex items-center gap-2.5">
+               <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg shadow-sm"><ArrowDownRight size={18} /></div>
+               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Contas a Pagar</span>
             </div>
          </div>
          <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">R$ {summary.contasAPagar.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-         <div className="text-xs font-medium text-red-500 mt-2 flex items-center gap-1 relative z-10"><TrendingDown size={12} /> Comprometido</div>
+         <div className="text-[11px] font-bold uppercase tracking-wider text-red-500 mt-3 flex items-center gap-1.5 relative z-10"><TrendingDown size={14} /> Comprometido</div>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700/50 p-5 rounded-2xl relative overflow-hidden group transition-all">
-         <div className="absolute -right-4 -top-4 w-24 h-24 bg-zinc-700/10 rounded-full blur-2xl group-hover:bg-zinc-700/20 transition-all"></div>
-         <div className="flex items-center justify-between mb-4 relative z-10">
-            <div className="flex items-center gap-2">
-               <div className="p-2 bg-zinc-800 text-zinc-400 rounded-lg"><Briefcase size={16} /></div>
-               <span className="text-sm font-medium text-zinc-400">Total Despesas Pagas</span>
+      <div className="bg-zinc-950 border border-zinc-800/80 hover:border-amber-500/30 p-6 rounded-xl relative overflow-hidden group transition-all duration-300 shadow-sm">
+         <div className="absolute -right-4 -top-4 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all duration-500"></div>
+         <div className="flex items-center justify-between mb-5 relative z-10">
+            <div className="flex items-center gap-2.5">
+               <div className="p-2 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-lg shadow-sm"><Briefcase size={18} /></div>
+               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Total Despesas</span>
             </div>
          </div>
          <div className="text-3xl font-heading font-semibold text-zinc-50 relative z-10 tracking-tight">R$ {summary.despesasPagas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-         <div className="text-xs font-medium text-zinc-500 mt-2 flex items-center gap-1 relative z-10">Acumulado Mes</div>
+         <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 mt-3 flex items-center gap-1.5 relative z-10">Acumulado Mes</div>
       </div>
     </div>
   );
