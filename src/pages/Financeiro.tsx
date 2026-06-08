@@ -75,7 +75,7 @@ export function Financeiro() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500" key={refreshKey}>
       <PageHeader 
-        title="Financeiro" 
+        title="Financeiro" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Financeiro"}]} 
         description="Gestão de fluxo de caixa, contas a pagar/receber e DRE simplificada." 
         action={
           <Button 

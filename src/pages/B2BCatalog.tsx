@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { B2BCatalogItemRecord } from '../repositories/interfaces/IB2BCatalogRepository';
-import { Layers, Eye, EyeOff, Edit, Plus, CheckCircle2, Package } from 'lucide-react';
+import { Layers, Eye, EyeOff, Edit, Plus, CheckCircle2, Package, Search } from 'lucide-react';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/ui/EmptyState';
 
 export function B2BCatalog() {
   const { b2bCatalogRepo, productRepo } = useRepositories();
@@ -21,34 +25,40 @@ export function B2BCatalog() {
     setLoading(false);
   }
 
+  if (loading) {
+     return (
+       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-96 w-full" />
+       </div>
+     );
+  }
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-light tracking-tight text-white flex items-center gap-3">
-             <Layers className="text-amber-500" />
-             Catálogo B2B
-          </h1>
-          <p className="text-zinc-400 mt-2">Gerencie produtos, preços B2B e quantidades mínimas.</p>
-        </div>
-        <button className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-md font-medium transition-colors">
-          <Plus size={16} /> Adicionar Produto
-        </button>
-      </div>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+      <PageHeader 
+        title="Catálogo B2B" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Catálogo B2B"}]}
+        description="Gerencie produtos, preços B2B e quantidades mínimas."
+        action={
+          <Button variant="primary" className="flex items-center gap-2">
+            <Plus size={16} /> Novo Produto
+          </Button>
+        }
+      />
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-        {loading ? (
-           <div className="p-8 text-center text-zinc-500">Carregando catálogo...</div>
-        ) : items.length === 0 ? (
-           <div className="py-12">
-              <div className="flex flex-col items-center justify-center text-center">
-                 <div className="w-12 h-12 rounded-full bg-zinc-950 flex items-center justify-center border border-zinc-800 mb-4">
-                   <Package className="text-zinc-500" size={20} />
-                 </div>
-                 <p className="text-sm font-medium text-zinc-300">Nenhum produto no Catálogo B2B</p>
-                 <p className="text-xs text-zinc-500 mt-1 max-w-sm">Adicione produtos e defina tabelas e quantidades mínimas para começar a atender atacadistas.</p>
-              </div>
-           </div>
+        {items.length === 0 ? (
+          <EmptyState
+            icon={<Package size={24} />}
+            title="Nenhum produto no Catálogo B2B"
+            description="Adicione produtos e defina tabelas e quantidades mínimas para começar a atender atacadistas."
+            action={
+              <Button variant="outline" className="mt-4">
+                <Plus size={16} className="mr-2" />
+                Adicionar Primeiro Produto
+              </Button>
+            }
+          />
         ) : (
           <table className="w-full text-left text-sm text-zinc-300">
             <thead className="bg-zinc-950/50 text-zinc-400 border-b border-zinc-800">
@@ -82,9 +92,9 @@ export function B2BCatalog() {
                       )}
                    </td>
                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button className="text-zinc-500 hover:text-white transition-colors">
+                      <Button variant="secondary" className="p-2 h-auto" title="Editar">
                          <Edit size={16} />
-                      </button>
+                      </Button>
                    </td>
                 </tr>
               ))}

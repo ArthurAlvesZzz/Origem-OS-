@@ -75,7 +75,7 @@ export function Comercial() {
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500" key={refreshKey}>
       <PageHeader 
-        title="Comercial & PDV" 
+        title="Comercial & PDV" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Comercial & PDV"}]} 
         description="Gestão de vendas, controle de caixa e histórico de pedidos B2B/B2C." 
         action={
           <Button onClick={() => setIsDrawerOpen(true)} variant="primary" size="lg">

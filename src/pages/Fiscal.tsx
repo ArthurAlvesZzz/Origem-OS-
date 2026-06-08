@@ -5,7 +5,7 @@ export function Fiscal() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       <PageHeader 
-        title="Central do Contador (Fiscal)" 
+        title="Central do Contador (Fiscal)" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Central do Contador (Fiscal)"}]} 
         description="Área exclusiva para integrações fiscais contábeis oficiais." 
       />
 

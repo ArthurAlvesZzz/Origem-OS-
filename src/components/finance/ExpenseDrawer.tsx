@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { Drawer } from '../ui/Drawer';
 import { motion } from 'motion/react';
 import { useToast } from '../../components/ui/Toast';
+import { useConfirm } from '../ui/ConfirmDialog';
 import { Select } from '../ui/Select';
 import { Input } from '../ui/Input';
 
@@ -21,6 +22,7 @@ const CATEGORIES = [
 
 export function ExpenseDrawer({ onClose, onComplete }: ExpenseDrawerProps) {
   const { success, error: toastError, info } = useToast();
+  const { confirm } = useConfirm();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -38,6 +40,13 @@ export function ExpenseDrawer({ onClose, onComplete }: ExpenseDrawerProps) {
       toastError('Preencha descrição e um valor válido.');
       return;
     }
+
+    const proceed = await confirm({
+      title: 'Confirmar Lançamento',
+      description: `Lançar despesa de R$ ${val.toFixed(2)} em ${date}?`,
+      confirmText: 'Lançar',
+    });
+    if (!proceed) return;
 
     setIsFinalizing(true);
     try {

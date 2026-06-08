@@ -46,8 +46,12 @@ export function CrmDealDrawer({ deal, onClose, onStatusChange }: CrmDealDrawerPr
     };
 
     const handleWhatsApp = () => {
-        const phone = customData.phone || "5511999999999";
-        window.open(`https://wa.me/${phone}?text=Olá, estou entrando em contato referente à ${deal.title}.`, '_blank');
+        const phone = customData.phone || deal.customer?.phone;
+        if (!phone) {
+            error('Número de telefone não encontrado.');
+            return;
+        }
+        window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=Olá, estou entrando em contato referente à ${deal.title}.`, '_blank');
     };
 
     return (

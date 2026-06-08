@@ -267,7 +267,7 @@ export function AssinaturasAdmin() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       <PageHeader 
-        title="Clube de Assinatura COFCOF" 
+        title="Clube de Assinatura COFCOF" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Clube de Assinatura COFCOF"}]} 
         description="Gestão de planos, aprovação de leads B2C e carteira de assinantes." 
       />
 

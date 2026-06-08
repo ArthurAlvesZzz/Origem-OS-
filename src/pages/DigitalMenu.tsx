@@ -6,6 +6,7 @@ import { DigitalMenuCategory, DigitalMenuConfig, DigitalMenuItem } from '../doma
 import { Order } from '../domain/types';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
 import { Card, CardContent } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
@@ -51,44 +52,65 @@ export function DigitalMenu() {
       }
   };
 
-  const addModifierGroup = async () => {
-       if (!activeItemForMod) return;
-       const grpName = prompt('Nome do Grupo (ex: Escolha a Carne, Adicionais)');
-       if (!grpName) return;
-       try {
-           await digitalMenuRepo.createModifierGroup({
-               tenantId: activeItemForMod.tenantId,
-               itemId: activeItemForMod.id,
-               name: grpName,
-               minSelections: 0,
-               maxSelections: 1,
-               active: true,
-               order: 1
-           });
-           const mods = await digitalMenuRepo.getModifiers(activeItemForMod.id);
-           setActiveItemMods(mods);
-           success('Grupo adicionado');
-       } catch(e) { error('Erro'); }
+  const [promptData, setPromptData] = useState<{
+    isOpen: boolean;
+    type: 'group' | 'option';
+    groupId?: string;
+    value1: string;
+    value2: string;
+  }>({
+    isOpen: false,
+    type: 'group',
+    value1: '',
+    value2: ''
+  });
+
+  const onConfirmPrompt = async () => {
+    if (!activeItemForMod) return;
+    try {
+      if (promptData.type === 'group') {
+        if (!promptData.value1) return;
+        await digitalMenuRepo.createModifierGroup({
+          tenantId: activeItemForMod.tenantId,
+          itemId: activeItemForMod.id,
+          name: promptData.value1,
+          minSelections: 0,
+          maxSelections: 1,
+          active: true,
+          order: 1
+        });
+        const mods = await digitalMenuRepo.getModifiers(activeItemForMod.id);
+        setActiveItemMods(mods);
+        success('Grupo adicionado');
+      } else if (promptData.type === 'option' && promptData.groupId) {
+        if (!promptData.value1) return;
+        const optPrice = parseFloat(promptData.value2 || '0');
+        await digitalMenuRepo.createModifierOption({
+          tenantId: activeItemForMod.tenantId,
+          groupId: promptData.groupId,
+          name: promptData.value1,
+          price: optPrice,
+          active: true,
+          order: 1
+        });
+        const mods = await digitalMenuRepo.getModifiers(activeItemForMod.id);
+        setActiveItemMods(mods);
+        success('Opção adicionada');
+      }
+      setPromptData({ isOpen: false, type: 'group', value1: '', value2: '' });
+    } catch(e) {
+      error('Erro ao salvar');
+    }
   };
 
-  const addModifierOption = async (groupId: string) => {
+  const addModifierGroup = () => {
        if (!activeItemForMod) return;
-       const optName = prompt('Nome da Opção (ex: Ponto da Carne, Bacon)');
-       if (!optName) return;
-       const optPrice = parseFloat(prompt('Preço (ex: 2.50) - 0 para grátis', '0') || '0');
-       try {
-           await digitalMenuRepo.createModifierOption({
-               tenantId: activeItemForMod.tenantId,
-               groupId,
-               name: optName,
-               price: optPrice,
-               active: true,
-               order: 1
-           });
-           const mods = await digitalMenuRepo.getModifiers(activeItemForMod.id);
-           setActiveItemMods(mods);
-           success('Opção adicionada');
-       } catch(e) { error('Erro'); }
+       setPromptData({ isOpen: true, type: 'group', value1: '', value2: '' });
+  };
+
+  const addModifierOption = (groupId: string) => {
+       if (!activeItemForMod) return;
+       setPromptData({ isOpen: true, type: 'option', groupId, value1: '', value2: '' });
   };
 
   const checkMpStatus = async () => {
@@ -132,13 +154,22 @@ export function DigitalMenu() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-zinc-500 animate-pulse">Carregando Cardápio Digital...</div>;
+    return (
+      <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-64 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <Skeleton className="h-[400px]" />
+           <Skeleton className="h-[400px]" />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500 p-4 md:p-8">
       <PageHeader
-        title="Cardápio Digital & B2C"
+        title="Cardápio Digital & B2C" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Cardápio Digital & B2C"}]}
         description="Gerencie seu cardápio público, vendas online e recepcionamento via KDS."
         action={
           <Button 
@@ -652,6 +683,32 @@ export function DigitalMenu() {
           </Button>
         </div>
       </Drawer>
+
+      {promptData.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+             <h3 className="text-lg font-medium text-white mb-4">
+                {promptData.type === 'group' ? 'Novo Grupo' : 'Nova Opção'}
+             </h3>
+             <div className="space-y-4">
+               <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Nome {promptData.type === 'group' ? 'do Grupo (ex: Adicionais)' : 'da Opção (ex: Bacon)'}</label>
+                  <input autoFocus type="text" value={promptData.value1} onChange={e => setPromptData({...promptData, value1: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500" />
+               </div>
+               {promptData.type === 'option' && (
+                 <div>
+                    <label className="block text-xs font-medium text-zinc-400 mb-1">Preço (0 para grátis)</label>
+                    <input type="number" step="0.01" value={promptData.value2} onChange={e => setPromptData({...promptData, value2: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500" />
+                 </div>
+               )}
+               <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="ghost" onClick={() => setPromptData({ isOpen: false, type: 'group', value1: '', value2: '' })}>Cancelar</Button>
+                  <Button variant="primary" onClick={onConfirmPrompt}>Salvar</Button>
+               </div>
+             </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

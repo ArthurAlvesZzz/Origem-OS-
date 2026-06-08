@@ -65,7 +65,7 @@ export function Producao() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto" key={refreshKey}>
       <PageHeader 
-        title="Controle de Produção" 
+        title="Controle de Produção" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Controle de Produção"}]} 
         description="Gestão de grãos verdes, receitas, perfis de torra e custeio." 
         action={
           <Button 

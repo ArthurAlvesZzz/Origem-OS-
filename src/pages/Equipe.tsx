@@ -6,6 +6,7 @@ import { TeamMember, Role, Permission, Invitation, AuditLog } from '../repositor
 import { Users, UserPlus, Shield, Activity, Fingerprint, Search, Edit2, Lock, ListFilter, MapPin, Mail, Loader2, Ban, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useConfirm } from '../components/ui/ConfirmDialog';
 import { useToast } from '../components/ui/Toast';
 
@@ -99,9 +100,10 @@ export function Equipe() {
       </div>
       <CardContent className="p-0">
       {isLoading ? (
-        <div className="p-16 text-center text-zinc-500 flex flex-col items-center gap-3">
-           <Loader2 className="animate-spin text-amber-500" size={32} />
-           <p className="text-sm">Carregando equipe...</p>
+        <div className="p-6 flex flex-col gap-4">
+           <Skeleton className="h-12 w-full rounded-lg" />
+           <Skeleton className="h-12 w-full rounded-lg bg-zinc-900/50" />
+           <Skeleton className="h-12 w-full rounded-lg" />
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -271,7 +273,7 @@ export function Equipe() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500">
       <PageHeader 
-        title="Gestão de Equipe e Acessos" 
+        title="Gestão de Equipe e Acessos" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Gestão de Equipe e Acessos"}]} 
         description="Controle de usuários, permissões granulares e auditoria do tenant." 
       />
 

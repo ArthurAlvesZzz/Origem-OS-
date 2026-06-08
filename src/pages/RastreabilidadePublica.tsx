@@ -192,7 +192,7 @@ export function RastreabilidadePublica() {
                className="w-full mt-2 font-mono text-xs uppercase tracking-widest"
                onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  toastError('Link copiado!');
+                  success('Link copiado!');
                }}
             >
                Copiar Link do Lote

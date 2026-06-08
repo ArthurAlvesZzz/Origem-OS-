@@ -8,9 +8,10 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   totalItems?: number;
   itemsPerPage?: number;
+  siblingCount?: number;
 }
 
-export function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }: PaginationProps) {
+export function Pagination({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, siblingCount = 1 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   return (
@@ -50,14 +51,12 @@ export function Pagination({ currentPage, totalPages, onPageChange, totalItems, 
               <span className="sr-only">Anterior</span>
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </button>
-            {/* Simple page numbers */}
             {Array.from({ length: totalPages }).map((_, i) => {
               const page = i + 1;
-              // Very simple pagination logic to not explode UI
               if (
                 page === 1 || 
                 page === totalPages || 
-                (page >= currentPage - 1 && page <= currentPage + 1)
+                (page >= currentPage - siblingCount && page <= currentPage + siblingCount)
               ) {
                 return (
                   <button
@@ -73,8 +72,8 @@ export function Pagination({ currentPage, totalPages, onPageChange, totalItems, 
                   </button>
                 );
               } else if (
-                page === currentPage - 2 ||
-                page === currentPage + 2
+                page === currentPage - siblingCount - 1 ||
+                page === currentPage + siblingCount + 1
               ) {
                 return <span key={page} className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-zinc-500 border border-zinc-800">...</span>;
               }

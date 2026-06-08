@@ -3,10 +3,12 @@ import { cn } from "../../lib/utils"
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   icon?: React.ReactNode;
+  error?: boolean;
+  success?: boolean;
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, icon, children, ...props }, ref) => {
+  ({ className, icon, error, success, children, ...props }, ref) => {
     return (
       <div className="relative w-full">
         {icon && (
@@ -18,9 +20,12 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           className={cn(
             "flex h-10 w-full appearance-none rounded-xl border border-zinc-800/80 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 hover:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
             icon && "pl-10",
+            error && "border-red-500/50 hover:border-red-500/80 focus:border-red-500/50 focus:ring-red-500/50 text-red-100",
+            success && "border-emerald-500/50 hover:border-emerald-500/80 focus:border-emerald-500/50 focus:ring-emerald-500/50 text-emerald-100",
             className
           )}
           ref={ref}
+          aria-invalid={error ? "true" : undefined}
           {...props}
         >
           {children}

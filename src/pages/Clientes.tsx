@@ -9,6 +9,7 @@ import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
+import { Skeleton } from '../components/ui/Skeleton';
 import { Drawer } from '../components/ui/Drawer';
 import { useToast } from '../components/ui/Toast';
 import { Pagination } from '../components/ui/Pagination';
@@ -66,7 +67,7 @@ export function Clientes() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col animate-in fade-in duration-500">
       <PageHeader
-        title="Clientes & Parceiros"
+        title="Clientes & Parceiros" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Clientes & Parceiros"}]}
         description="Gerencie sua rede de contatos B2B, B2C e distribuidores."
         action={
           <Button 
@@ -113,9 +114,12 @@ export function Clientes() {
       <Card className="flex-1 overflow-hidden flex flex-col">
         <CardContent className="p-0 flex-1 flex flex-col">
           {loading ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 p-8">
-              <div className="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mb-4" />
-              Carregando contatos...
+            <div className="flex-1 flex flex-col p-6 space-y-4">
+              <Skeleton className="h-10 w-full rounded-lg" />
+              <Skeleton className="h-10 w-full rounded-lg bg-zinc-900/50" />
+              <Skeleton className="h-10 w-full rounded-lg" />
+              <Skeleton className="h-10 w-full rounded-lg bg-zinc-900/50" />
+              <Skeleton className="h-10 w-full rounded-lg" />
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex-1 p-8 flex items-center justify-center">

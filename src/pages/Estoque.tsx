@@ -79,7 +79,7 @@ export function Estoque() {
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500" key={refreshKey}>
       <PageHeader 
-        title="Controle de Estoque" 
+        title="Controle de Estoque" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Controle de Estoque"}]} 
         description="Gestão de saldos físicos, inventário e histórico de movimentações." 
         action={
           <div className="flex items-center gap-3">

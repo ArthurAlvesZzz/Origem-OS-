@@ -6,6 +6,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useConfirm } from '../components/ui/ConfirmDialog';
 import { useToast } from '../components/ui/Toast';
 
@@ -188,7 +189,7 @@ export function Relatorios() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col no-print animate-in fade-in duration-500">
       <PageHeader
-        title="Central de Relatórios"
+        title="Central de Relatórios" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Central de Relatórios"}]}
         description="Geração de documentos, extratos e relatórios pormenorizados."
         action={
           <div className="flex gap-2">
@@ -207,9 +208,12 @@ export function Relatorios() {
       <Card className="flex-1 overflow-hidden flex flex-col">
         <CardContent className="p-6 flex-1 overflow-y-auto custom-scrollbar">
         {loading ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 h-64">
-             <div className="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mb-4" />
-             Carregando dados...
+          <div className="flex-1 flex flex-col gap-4">
+             <Skeleton className="h-48 w-full rounded-2xl" />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <Skeleton className="h-64 rounded-2xl" />
+               <Skeleton className="h-64 rounded-2xl bg-zinc-900/50" />
+             </div>
           </div>
         ) : (
           <>

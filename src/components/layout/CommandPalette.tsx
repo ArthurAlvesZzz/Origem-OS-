@@ -21,14 +21,17 @@ import { BRAND } from '../../lib/brand';
 export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const { customerRepo, orderRepo, productRepo } = useRepositories();
   const inputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
       setQuery('');
       setResults([]);
+      setSelectedIndex(0);
     }
   }, [isOpen]);
 
@@ -43,6 +46,7 @@ export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: Comma
   useEffect(() => {
     if (!query) {
       setResults([]);
+      setSelectedIndex(0);
       return;
     }
 
@@ -109,6 +113,29 @@ export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: Comma
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (query.length > 0 && results.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex(prev => {
+          const next = (prev + 1) % results.length;
+          resultsRef.current?.children[next]?.scrollIntoView({ block: 'nearest' });
+          return next;
+        });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex(prev => {
+          const next = (prev - 1 + results.length) % results.length;
+          resultsRef.current?.children[next]?.scrollIntoView({ block: 'nearest' });
+          return next;
+        });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSelect(results[selectedIndex]);
+      }
+    }
+  };
+
   const handleAction = (action: string) => {
       if (action === 'pdv') {
          onNavigate('comercial');
@@ -138,6 +165,7 @@ export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: Comma
             placeholder="Buscar pedido, cliente, produto, módulo..."
             value={query}
             onChange={e => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           <div className="text-[10px] text-zinc-500 font-mono tracking-widest bg-zinc-800 px-2 py-1 rounded">ESC</div>
         </div>
@@ -148,12 +176,16 @@ export function CommandPalette({ isOpen, onClose, onNavigate, navGroups }: Comma
                  {results.length === 0 ? (
                     <div className="p-4 text-center text-zinc-500 text-sm">Nenhum resultado encontrado para "{query}"</div>
                  ) : (
-                    <div className="space-y-1">
+                    <div ref={resultsRef} className="space-y-1">
                        {results.map((item, idx) => (
-                          <button key={`${item.type}-${item.id}-${idx}`} onClick={() => handleSelect(item)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-800 rounded-xl transition-colors group text-left">
-                             <item.icon size={18} className="text-zinc-400 group-hover:text-amber-500" />
+                          <button 
+                            key={`${item.type}-${item.id}-${idx}`} 
+                            onClick={() => handleSelect(item)} 
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group text-left ${idx === selectedIndex ? 'bg-zinc-800' : 'hover:bg-zinc-800'}`}
+                          >
+                             <item.icon size={18} className={`transition-colors ${idx === selectedIndex ? 'text-amber-500' : 'text-zinc-400 group-hover:text-amber-500'}`} />
                              <div className="flex flex-col flex-1">
-                                <span className="text-sm font-medium text-zinc-100 group-hover:text-amber-500">{item.label}</span>
+                                <span className={`text-sm font-medium transition-colors ${idx === selectedIndex ? 'text-amber-500' : 'text-zinc-100 group-hover:text-amber-500'}`}>{item.label}</span>
                                 {item.subLabel && <span className="text-xs text-zinc-500">{item.subLabel}</span>}
                              </div>
                              <span className="text-[10px] font-medium text-zinc-600 uppercase tracking-widest">{item.type}</span>

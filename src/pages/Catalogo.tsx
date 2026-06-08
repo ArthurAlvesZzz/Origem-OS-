@@ -77,7 +77,7 @@ export function Catalogo() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto" key={refreshKey}>
       <PageHeader 
-        title="Catálogo de Produtos" 
+        title="Catálogo de Produtos" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Catálogo de Produtos"}]} 
         description="Gerencie seus cafés, insumos e variações." 
         action={
           <Button 

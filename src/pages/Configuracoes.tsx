@@ -6,13 +6,14 @@ import { TenantProfile, Branch, BusinessRules, ProductionRules, ModuleFlags } fr
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useToast } from '../components/ui/Toast';
 
 export function Configuracoes() {
   const { settingsRepo } = useRepositories();
   const [activeTab, setActiveTab] = useState('empresa');
   const [loading, setLoading] = useState(true);
-  const { success, error } = useToast();
+  const { success, error, info } = useToast();
 
   // States
   const [profile, setProfile] = useState<TenantProfile | null>(null);
@@ -91,12 +92,15 @@ export function Configuracoes() {
   };
 
   if (loading) {
-    return (
-      <div className="p-8 max-w-7xl mx-auto h-full flex flex-col justify-center items-center">
-        <div className="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mb-4" />
-        <p className="text-zinc-500 font-medium">Carregando configurações...</p>
-      </div>
-    );
+     return (
+       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+          <Skeleton className="h-20 w-full" />
+          <div className="flex gap-8">
+            <Skeleton className="h-64 w-64" />
+            <Skeleton className="h-96 flex-1" />
+          </div>
+       </div>
+     );
   }
 
   const tabs = [
@@ -111,7 +115,7 @@ export function Configuracoes() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col animate-in fade-in duration-500">
       <PageHeader
-        title="Configurações do Workspace"
+        title="Configurações do Workspace" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Configurações do Workspace"}]}
         description="Gerencie perfil do tenant, filiais e regras centrais do seu negócio."
       />
 
@@ -183,7 +187,7 @@ export function Configuracoes() {
                   <CardTitle>Unidades e Filiais</CardTitle>
                   <CardDescription>Gerencie as diferentes localizações físicas ou virtuais do negócio.</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => info('Gestão de unidades em desenvolvimento.')}>
                   <Plus size={16} /> Nova Unidade
                 </Button>
               </CardHeader>
@@ -210,7 +214,7 @@ export function Configuracoes() {
                          >
                            {b.status === 'active' ? 'Operante' : 'Inativa'}
                          </button>
-                         <Button variant="outline" size="sm">Editar</Button>
+                         <Button variant="outline" size="sm" onClick={() => info(`Editando unidade: ${b.name}`)}>Editar</Button>
                       </div>
                     </div>
                   ))}

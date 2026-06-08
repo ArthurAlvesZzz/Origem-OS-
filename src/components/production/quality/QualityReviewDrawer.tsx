@@ -50,20 +50,29 @@ export function QualityReviewDrawer({ reviewId, onClose, onSuccess }: QualityRev
   const totalScore = Object.values(scores).reduce((a,b) => a+b, 0) - (scores.defects * 2);
 
   const handleApprove = async () => {
+    const proceed = await confirm({
+      title: 'Aprovar Lote',
+      description: 'Confirmar a aprovação deste lote CQ e liberação para estoque?',
+      confirmText: 'Sim, Aprovar',
+    });
+    if (!proceed) return;
+
     setLoading(true);
     try {
-      await qualityRepo.updateReview(reviewId, {
-         fragranceScore: scores.fragrance,
-         aromaScore: scores.aroma,
-         acidityScore: scores.acidity,
-         bodyScore: scores.body,
-         sweetnessScore: scores.sweetness,
-         balanceScore: scores.balance,
-         aftertasteScore: scores.aftertaste,
-         defectsScore: scores.defects,
-         scoreTotal: totalScore > 0 ? totalScore + 50 : 0
-      });
-      await qualityRepo.approveReview(reviewId, notes);
+      await Promise.all([
+        qualityRepo.updateReview(reviewId, {
+           fragranceScore: scores.fragrance,
+           aromaScore: scores.aroma,
+           acidityScore: scores.acidity,
+           bodyScore: scores.body,
+           sweetnessScore: scores.sweetness,
+           balanceScore: scores.balance,
+           aftertasteScore: scores.aftertaste,
+           defectsScore: scores.defects,
+           scoreTotal: totalScore > 0 ? totalScore + 50 : 0
+        }),
+        qualityRepo.approveReview(reviewId, notes)
+      ]);
       onSuccess();
     } catch (e) {
       toastError('Erro ao aprovar lote.');
@@ -83,18 +92,20 @@ export function QualityReviewDrawer({ reviewId, onClose, onSuccess }: QualityRev
 
     setLoading(true);
     try {
-      await qualityRepo.updateReview(reviewId, {
-         fragranceScore: scores.fragrance,
-         aromaScore: scores.aroma,
-         acidityScore: scores.acidity,
-         bodyScore: scores.body,
-         sweetnessScore: scores.sweetness,
-         balanceScore: scores.balance,
-         aftertasteScore: scores.aftertaste,
-         defectsScore: scores.defects,
-         scoreTotal: totalScore > 0 ? totalScore + 50 : 0
-      });
-      await qualityRepo.rejectReview(reviewId, notes);
+      await Promise.all([
+        qualityRepo.updateReview(reviewId, {
+           fragranceScore: scores.fragrance,
+           aromaScore: scores.aroma,
+           acidityScore: scores.acidity,
+           bodyScore: scores.body,
+           sweetnessScore: scores.sweetness,
+           balanceScore: scores.balance,
+           aftertasteScore: scores.aftertaste,
+           defectsScore: scores.defects,
+           scoreTotal: totalScore > 0 ? totalScore + 50 : 0
+        }),
+        qualityRepo.rejectReview(reviewId, notes)
+      ]);
       onSuccess();
     } catch (e) {
       toastError('Erro ao reprovar lote.');

@@ -10,6 +10,7 @@ import { Consignment } from '../domain/types';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
 import { Input } from '../components/ui/Input';
 import { Pagination } from '../components/ui/Pagination';
 
@@ -54,7 +55,7 @@ export function Consignacao() {
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto h-full flex flex-col animate-in fade-in duration-500" key={refreshKey}>
       <PageHeader 
-        title="Consignação Lite" 
+        title="Consignação Lite" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Consignação Lite"}]} 
         description="Controle simples de envios e acertos mensais em parceiros." 
         action={
           <Button 
@@ -81,9 +82,11 @@ export function Consignacao() {
       <Card className="flex-1 overflow-hidden flex flex-col">
         <CardContent className="p-0 flex-1 flex flex-col">
           {loading ? (
-             <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 p-8">
-               <div className="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mb-4" />
-               Carregando remessas...
+             <div className="flex-1 flex flex-col p-6 space-y-4">
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full rounded-lg bg-zinc-900/50" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <Skeleton className="h-10 w-full rounded-lg bg-zinc-900/50" />
              </div>
           ) : (
              <div className="overflow-x-auto flex-1">

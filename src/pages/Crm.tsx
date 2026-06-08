@@ -82,7 +82,7 @@ export function Crm() {
     return (
         <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
             <PageHeader 
-                title="Gestão & Relacionamento" 
+                title="Gestão & Relacionamento" breadcrumbs={[{label: "Dashboard", href: "#/"}, {label: "Gestão & Relacionamento"}]} 
                 description="CRM de vendas, atendimento omnichannel, campanhas e fidelidade." 
             />
 

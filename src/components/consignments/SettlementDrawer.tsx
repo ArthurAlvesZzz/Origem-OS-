@@ -205,9 +205,9 @@ export function SettlementDrawer({ onClose, onComplete, consignment }: Settlemen
             const unallocated = item.qtySent - allocated;
             const isSettled = unallocated <= 0;
 
-            const soldInput = parseInt(settlements[item.productId]?.qtySold) || 0;
-            const retInput = parseInt(settlements[item.productId]?.qtyReturned) || 0;
-            const lostInput = parseInt(settlements[item.productId]?.qtyLost) || 0;
+            const soldInput = parseFloat(settlements[item.productId]?.qtySold) || 0;
+            const retInput = parseFloat(settlements[item.productId]?.qtyReturned) || 0;
+            const lostInput = parseFloat(settlements[item.productId]?.qtyLost) || 0;
             const localAllocated = soldInput + retInput + lostInput;
             const localUnallocated = unallocated - localAllocated;
 
