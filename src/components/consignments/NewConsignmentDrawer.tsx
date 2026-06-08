@@ -7,6 +7,9 @@ import { Drawer } from '../ui/Drawer';
 import { Button } from '../ui/Button';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { useToast } from '../../components/ui/Toast';
+import { Select } from '../../components/ui/Select';
+import { Input } from '../../components/ui/Input';
+import { motion } from 'motion/react';
 
 interface NewConsignmentDrawerProps {
   onClose: () => void;
@@ -16,19 +19,19 @@ interface NewConsignmentDrawerProps {
 export function NewConsignmentDrawer({ onClose, onComplete }: NewConsignmentDrawerProps) {
   const { success, error: toastError, info } = useToast();
   const [partnerId, setPartnerId] = useState('');
-  const [partnerFilter, setPartnerFilter] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [items, setItems] = useState<{ productId: string; name: string; qtySent: number; unitPrice: number; unitCost: number }[]>([]);
   
   const [productId, setProductId] = useState('');
   const [qty, setQty] = useState('');
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const { productRepo, consignmentRepo, inventoryRepo, settingsRepo } = useRepositories();
   const [partners, setPartners] = useState<{id: string, name: string, defaultTermDays?: number}[]>([]);
   const [productsData, setProductsData] = useState<(Product & { currentStock: number })[]>([]);
   
-  const confirm = useConfirm();
+  const { confirm } = useConfirm();
 
   useEffect(() => {
     consignmentRepo.getPartners().then(setPartners);
@@ -63,7 +66,7 @@ export function NewConsignmentDrawer({ onClose, onComplete }: NewConsignmentDraw
     if (q > selectedProduct.currentStock) {
       const proceed = await confirm({
         title: 'Estoque insuficiente',
-        message: `Cuidado: O produto ${selectedProduct.name} tem apenas ${selectedProduct.currentStock} disponíveis. Deseja adicionar mesmo assim? O estoque ficará negativo.`,
+        description: `Cuidado: O produto ${selectedProduct.name} tem apenas ${selectedProduct.currentStock} disponíveis. Deseja adicionar mesmo assim? O estoque ficará negativo.`,
         confirmText: 'Adicionar',
         cancelText: 'Cancelar'
       });
@@ -135,13 +138,26 @@ export function NewConsignmentDrawer({ onClose, onComplete }: NewConsignmentDraw
           unitCost: i.unitCost
         }))
       });
-      success('Remessa de consignação gerada com sucesso! O estoque foi deduzido.');
-      onComplete();
+      
+      setIsSuccess(true);
     } catch (err: any) {
       console.error(err);
       toastError(err.message);
       setIsFinalizing(false);
     }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const resetState = () => {
+    setItems([]);
+    setPartnerId('');
+    setProductId('');
+    setQty('');
+    setIsSuccess(false);
+    setIsFinalizing(false);
   };
 
   const totalValue = items.reduce((acc, item) => acc + (item.qtySent * item.unitPrice), 0);
@@ -154,112 +170,138 @@ export function NewConsignmentDrawer({ onClose, onComplete }: NewConsignmentDraw
       icon={<Truck size={20} />}
       size="md"
       footer={
-        <div className="w-full">
-          <div className="flex justify-between mb-4">
-            <span className="text-sm text-zinc-400">Total Potencial (Estimado)</span>
-            <span className="text-xl font-semibold text-emerald-400">{formatBRL(totalValue)}</span>
+        !isSuccess ? (
+          <div className="w-full">
+            <div className="flex justify-between items-center mb-4 bg-zinc-900 border border-zinc-800 p-4 rounded-xl shadow-inner">
+              <span className="text-sm text-zinc-400 font-medium">Total Potencial (Estimado)</span>
+              <span className="text-2xl font-heading font-semibold text-emerald-400">{formatBRL(totalValue)}</span>
+            </div>
+            <Button 
+              variant="conclusive"
+              size="lg"
+              onClick={handleFinalize}
+              disabled={items.length === 0 || !partnerId || isFinalizing}
+              isLoading={isFinalizing}
+              className="w-full gap-2 text-[15px]"
+            >
+              {!isFinalizing && <Check size={20} />}
+              Gerar Consignação
+            </Button>
           </div>
-          <Button 
-            variant="conclusive"
-            size="lg"
-            onClick={handleFinalize}
-            disabled={items.length === 0 || !partnerId || isFinalizing}
-            isLoading={isFinalizing}
-            className="w-full gap-2 text-[15px]"
-          >
-            {!isFinalizing && <Check size={20} />}
-            Gerar Consignação
-          </Button>
-        </div>
+        ) : (
+          <div className="flex gap-3">
+             <Button variant="outline" size="lg" className="flex-1" onClick={handlePrint}>
+                Imprimir Remessa
+             </Button>
+             <Button variant="primary" size="lg" className="flex-1 gap-2" onClick={onComplete}>
+                Concluir
+             </Button>
+          </div>
+        )
       }
     >
-      <div className="space-y-8">
-        <section className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-2">Parceiro (Local B2B)</label>
-            <select 
-              value={partnerId}
-              onChange={handlePartnerSelect}
-              className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-            >
-              <option value="" disabled>Selecione o parceiro</option>
-              {partners.map(p => (
-                <option key={p.id} value={p.id}>{p.name} (Prazo: {p.defaultTermDays}d)</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-2">Data Limite de Acerto</label>
-            <input 
-              type="date" 
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-            />
-          </div>
-        </section>
-
-        <section className="pt-4 border-t border-zinc-800/50">
-          <h3 className="text-sm font-medium text-zinc-300 mb-4">Itens da Remessa</h3>
-          
-          <div className="flex gap-2 items-end mb-4">
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Produto</label>
-              <select 
-                value={productId}
-                onChange={e => setProductId(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700"
+      {!isSuccess ? (
+        <div className="space-y-8">
+          <section className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Parceiro (Local B2B)</label>
+              <Select 
+                value={partnerId}
+                onChange={handlePartnerSelect}
               >
-                <option value="">Selecione...</option>
-                {productsData.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} (Disp: {p.currentStock})</option>
+                <option value="" disabled>Selecione o parceiro</option>
+                {partners.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} (Prazo: {p.defaultTermDays}d)</option>
                 ))}
-              </select>
+              </Select>
             </div>
-            <div className="w-24">
-              <label className="block text-xs font-medium text-zinc-500 mb-1.5">Qtd</label>
-              <input 
-                type="number" 
-                min="0"
-                step="1"
-                value={qty}
-                onChange={e => setQty(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700"
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Data Limite de Acerto</label>
+              <Input 
+                type="date" 
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
               />
             </div>
-            <button 
-              type="button"
-              onClick={handleAddItem}
-              className="bg-zinc-800 hover:bg-zinc-700 text-zinc-50 px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
-            >
-              Incluir
-            </button>
-          </div>
+          </section>
 
-          {items.length > 0 ? (
-            <ul className="space-y-2 mt-4">
-              {items.map(item => (
-                <li key={item.productId} className="flex justify-between items-center bg-zinc-900 border border-zinc-800 p-3 rounded-lg text-sm">
-                  <div>
-                    <span className="font-medium text-zinc-300">{item.name}</span>
-                    <div className="text-zinc-500 text-xs">{formatBRL(item.unitPrice)} / un</div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="tabular-nums font-semibold text-zinc-100">{item.qtySent} un</span>
-                    <button onClick={() => handleRemoveItem(item.productId)} className="text-zinc-500 hover:text-red-400 p-1">
-                      <X size={16} />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="py-6 text-center border border-dashed border-zinc-800 rounded-lg text-sm text-zinc-500">
-              Nenhum produto adicionado à remessa.
+          <section className="pt-6 border-t border-zinc-800/50">
+            <h3 className="font-heading font-medium text-zinc-100 mb-4">Itens da Remessa</h3>
+            
+            <div className="flex gap-3 items-end mb-4 bg-zinc-900/50 p-4 border border-zinc-800 rounded-2xl">
+              <div className="flex-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Produto</label>
+                <Select 
+                  value={productId}
+                  onChange={e => setProductId(e.target.value)}
+                >
+                  <option value="">Selecione...</option>
+                  {productsData.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} (Disp: {p.currentStock})</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="w-24">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Qtd</label>
+                <Input 
+                  type="number" 
+                  min="0"
+                  step="1"
+                  value={qty}
+                  onChange={e => setQty(e.target.value)}
+                />
+              </div>
+              <Button 
+                variant="secondary"
+                onClick={handleAddItem}
+                className="mb-0 h-[42px]"
+              >
+                Incluir
+              </Button>
             </div>
-          )}
-        </section>
-      </div>
+
+            {items.length > 0 ? (
+              <ul className="space-y-2 mt-4">
+                {items.map(item => (
+                  <li key={item.productId} className="flex justify-between items-center bg-zinc-900 border border-zinc-800 p-3 rounded-xl transition-all hover:border-zinc-700">
+                    <div>
+                      <span className="font-medium font-heading text-zinc-100">{item.name}</span>
+                      <div className="text-zinc-500 text-xs font-mono uppercase tracking-widest">{formatBRL(item.unitPrice)} / un</div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="tabular-nums font-semibold text-amber-500">{item.qtySent} un</span>
+                      <button onClick={() => handleRemoveItem(item.productId)} className="text-zinc-500 hover:text-red-400 p-2 rounded-lg hover:bg-zinc-800 transition-colors">
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="py-8 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-900/30">
+                <span className="text-sm font-medium text-zinc-500">Nenhum produto na remessa.</span>
+              </div>
+            )}
+          </section>
+        </div>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex-1 flex flex-col items-center justify-center p-8 text-center"
+        >
+          <div className="w-24 h-24 bg-amber-500/10 rounded-full flex items-center justify-center text-amber-500 mb-6 shadow-[0_0_40px_rgba(197,152,104,0.2)]">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
+              <Check size={48} strokeWidth={1.5} />
+            </motion.div>
+          </div>
+          <h3 className="text-2xl font-heading font-semibold text-zinc-100 mb-2">Remessa Gerada</h3>
+          <p className="text-zinc-400 max-w-sm">
+            Consignação registrada com sucesso. O estoque foi deduzido.
+          </p>
+        </motion.div>
+      )}
     </Drawer>
   );
 }
+

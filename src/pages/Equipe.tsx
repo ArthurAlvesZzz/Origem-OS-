@@ -13,7 +13,7 @@ type Tab = 'members' | 'invitations' | 'roles' | 'permissions' | 'audit';
 
 export function Equipe() {
   const { teamRepo, actualType } = useRepositories();
-  const confirm = useConfirm();
+  const { confirm } = useConfirm();
   const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('members');
   const [isLoading, setIsLoading] = useState(true);
@@ -57,7 +57,7 @@ export function Equipe() {
           title: 'Suspender Usuário',
           description: 'Deseja realmente suspender este usuário? Ele perderá o acesso ao sistema.',
           confirmText: 'Sim, Suspender',
-          type: 'danger'
+          isDestructive: true
         });
         if (!proceed) return;
         await teamRepo.suspendMember(member.id);

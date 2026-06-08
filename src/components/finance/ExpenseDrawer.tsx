@@ -6,6 +6,8 @@ import { Button } from '../ui/Button';
 import { Drawer } from '../ui/Drawer';
 import { motion } from 'motion/react';
 import { useToast } from '../../components/ui/Toast';
+import { Select } from '../ui/Select';
+import { Input } from '../ui/Input';
 
 interface ExpenseDrawerProps {
   onClose: () => void;
@@ -104,37 +106,36 @@ export function ExpenseDrawer({ onClose, onComplete }: ExpenseDrawerProps) {
           <section className="space-y-5 bg-zinc-900/40 p-5 rounded-2xl border border-zinc-800/50">
             <div>
               <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Descrição da Despesa</label>
-              <input type="text" value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 text-zinc-50 rounded-xl px-4 py-3 text-sm transition-colors focus:outline-none" placeholder="Ex: Fornecedor Caixas, Conta de Luz..." />
+              <Input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: Fornecedor Caixas, Conta de Luz..." />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Valor (R$)</label>
-                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 focus:border-red-500 text-red-400 rounded-xl px-4 py-3 text-lg font-mono transition-colors focus:outline-none" placeholder="0.00" />
+                <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} className="text-red-400 font-mono text-lg" placeholder="0.00" />
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{status === 'Agendado' ? 'Vencimento' : 'Data do Pgto'}</label>
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 text-zinc-50 rounded-xl px-4 py-4 text-sm transition-colors focus:outline-none" />
+                <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-zinc-800/50">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Categoria</label>
-                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 text-zinc-50 rounded-xl px-4 py-3 text-sm transition-colors focus:outline-none appearance-none">
+                <Select value={category} onChange={e => setCategory(e.target.value)}>
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                </Select>
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Método de Pgto</label>
                 <div className="relative">
-                  <CreditCard size={14} className="absolute left-3 top-3.5 text-zinc-500" />
-                  <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 text-zinc-50 rounded-xl pl-9 pr-4 py-3 text-sm transition-colors focus:outline-none appearance-none">
+                  <Select icon={<CreditCard size={14} />} value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
                     <option value="">(A definir)</option>
                     <option value="PIX">PIX</option>
                     <option value="Boleto">Boleto</option>
                     <option value="Cartão">Cartão</option>
-                  </select>
+                  </Select>
                 </div>
               </div>
             </div>

@@ -16,6 +16,7 @@ import { CalendarTab } from '../components/crm/CalendarTab';
 import { LoyaltyTab } from '../components/crm/LoyaltyTab';
 import { ReputationTab } from '../components/crm/ReputationTab';
 import { InsightsTab } from '../components/crm/InsightsTab';
+import { Button } from '../components/ui/Button';
 
 export function Crm() {
     const { crmRepo } = useRepositories();

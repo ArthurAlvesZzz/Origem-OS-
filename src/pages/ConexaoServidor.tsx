@@ -6,7 +6,7 @@ import { useConfirm } from '../components/ui/ConfirmDialog';
 
 export function ConexaoServidor() {
   const { actualType } = useRepositories();
-  const confirm = useConfirm();
+  const { confirm } = useConfirm();
   const [dataMode, setDataMode] = useState<'mock' | 'api'>(
     (localStorage.getItem('DATA_MODE') as any) || 'mock'
   );

@@ -7,7 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useRepositories } from '../repositories/RepositoryProvider';
-import { DashboardSummary, DashboardAlert, DashboardActivity, DashboardInsight, Order, Lead } from '../domain/types';
+import { DashboardSummary, DashboardAlert, DashboardActivity, DashboardInsight, Order } from '../domain/types';
 import { AlertsAndInsights } from '../components/dashboard/AlertsAndInsights';
 import { BRAND } from '../lib/brand';
 import { formatBRL, formatNumber } from '../lib/format';
@@ -22,7 +22,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
-  const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
+  const [recentLeads, setRecentLeads] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function Dashboard() {
         dashboardRepo.getInsights ? dashboardRepo.getInsights() : Promise.resolve([]),
         settingsRepo.getProfile(),
         orderRepo.getOrders(),
-        crmRepo.getLeads()
+        Promise.resolve([])
       ]);
       setSummary(sum);
       setAlerts(alts);
@@ -66,7 +66,7 @@ export function Dashboard() {
       });
 
       orders.forEach(o => {
-        const orderDate = new Date(o.createdAt).toDateString();
+        const orderDate = new Date(o.date).toDateString();
         const day = last7Days.find(d => d.date === orderDate);
         if (day) {
           day.recebido += o.total;

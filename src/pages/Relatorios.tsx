@@ -11,7 +11,7 @@ import { useToast } from '../components/ui/Toast';
 
 export function Relatorios() {
   const { reportsRepo, settingsRepo } = useRepositories();
-  const confirm = useConfirm();
+  const { confirm } = useConfirm();
   const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState('vendas');
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,7 @@ export function Relatorios() {
       title: 'Cancelar Documento',
       description: 'Cancelar este documento? Ele ficará marcado como inválido.',
       confirmText: 'Sim, Cancelar',
-      type: 'danger'
+      isDestructive: true
     });
     if(!proceed) return;
     try {

@@ -5,6 +5,10 @@ import { useRepositories } from '../../repositories/RepositoryProvider';
 import { Drawer } from '../ui/Drawer';
 import { Button } from '../ui/Button';
 import { useToast } from '../../components/ui/Toast';
+import { Select } from '../ui/Select';
+import { Input } from '../ui/Input';
+import { Textarea } from '../ui/Textarea';
+import { motion } from 'motion/react';
 
 interface StockMovementDrawerProps {
   onClose: () => void;
@@ -19,6 +23,7 @@ export function StockMovementDrawer({ onClose, onComplete, initialType = 'Entrad
   const [qty, setQty] = useState('');
   const [reason, setReason] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const { productRepo, inventoryRepo } = useRepositories();
   const [productsData, setProductsData] = useState<(Product & { currentStock: number })[]>([]);
@@ -67,8 +72,10 @@ export function StockMovementDrawer({ onClose, onComplete, initialType = 'Entrad
         return;
       }
 
-      success('Movimentação registrada com sucesso!');
-      onComplete();
+      setIsSuccess(true);
+      setTimeout(() => {
+        onComplete();
+      }, 1500);
     } catch (err: any) {
       console.error(err);
       toastError(err.message);
@@ -84,98 +91,117 @@ export function StockMovementDrawer({ onClose, onComplete, initialType = 'Entrad
       icon={<ArrowRightLeft size={20} />}
       size="sm"
       footer={
-        <Button 
-          variant="conclusive"
-          size="lg"
-          onClick={handleSubmit}
-          disabled={isSaving}
-          isLoading={isSaving}
-          className="w-full gap-2 text-[15px]"
-        >
-          {!isSaving && <Check size={20} />}
-          Confirmar Movimentação
-        </Button>
+        !isSuccess ? (
+          <Button 
+            variant="conclusive"
+            size="lg"
+            onClick={handleSubmit}
+            disabled={isSaving}
+            isLoading={isSaving}
+            className="w-full gap-2 text-[15px]"
+          >
+            {!isSaving && <Check size={20} />}
+            Confirmar Movimentação
+          </Button>
+        ) : undefined
       }
     >
-      <form id="movement-form" onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
-          {(['Entrada', 'Ajuste', 'Perda'] as MovementType[]).map(t => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setType(t)}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-                type === t 
-                  ? 'bg-zinc-800 text-zinc-50 shadow-sm' 
-                  : 'text-zinc-500 hover:text-zinc-300'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-1.5">Produto</label>
-          <select 
-            required
-            value={productId}
-            onChange={e => setProductId(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700"
-          >
-            <option value="" disabled>Selecione um produto</option>
-            {productsData.map(p => (
-              <option key={p.id} value={p.id}>{p.name} (Saldo: {p.currentStock} {p.unit})</option>
+      {!isSuccess ? (
+        <form id="movement-form" onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex bg-zinc-900 border border-zinc-800 p-1 rounded-xl">
+            {(['Entrada', 'Ajuste', 'Perda'] as MovementType[]).map(t => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setType(t)}
+                className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+                  type === t 
+                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 shadow-[0_0_10px_rgba(197,152,104,0.1)]' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {t}
+              </button>
             ))}
-          </select>
-        </div>
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">
-              {type === 'Ajuste' ? 'Novo Saldo Final' : 'Quantidade'}
-            </label>
-            <input 
-              type="number" 
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Produto</label>
+            <Select 
               required
-              min="0"
-              step="0.01"
-              value={qty}
-              onChange={e => setQty(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700 tabular-nums" 
-            />
+              value={productId}
+              onChange={e => setProductId(e.target.value)}
+            >
+              <option value="" disabled>Selecione um produto</option>
+              {productsData.map(p => (
+                <option key={p.id} value={p.id}>{p.name} (Saldo: {p.currentStock} {p.unit})</option>
+              ))}
+            </Select>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">
+                {type === 'Ajuste' ? 'Novo Saldo Final' : 'Quantidade'}
+              </label>
+              <Input 
+                type="number" 
+                required
+                min="0"
+                step="0.01"
+                value={qty}
+                onChange={e => setQty(e.target.value)}
+                className="font-mono text-lg tabular-nums" 
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Unidade</label>
+              <Input 
+                type="text" 
+                disabled
+                value={selectedProduct?.unit || '-'}
+                className="cursor-not-allowed text-zinc-500" 
+              />
+            </div>
+          </div>
+
+          {selectedProduct && type === 'Ajuste' && qty && (
+            <div className="bg-zinc-900/50 border border-zinc-800/50 p-4 rounded-xl text-sm text-zinc-400">
+              O estoque mudará de <span className="font-semibold text-zinc-200">{selectedProduct.currentStock}</span> para <span className="font-semibold text-amber-500">{qty}</span>.
+              Diferença: <span className="font-medium text-zinc-300">{parseFloat(qty) - selectedProduct.currentStock}</span>.
+            </div>
+          )}
+
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">Unidade</label>
-            <input 
-              type="text" 
-              disabled
-              value={selectedProduct?.unit || '-'}
-              className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-500 rounded-lg px-4 py-2.5 cursor-not-allowed" 
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Motivo / Observação</label>
+            <Textarea 
+              rows={3}
+              required
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              placeholder="Ex: Torra lote #10, Quebra na embalagem..."
+              className="resize-none"
             />
           </div>
-        </div>
 
-        {selectedProduct && type === 'Ajuste' && qty && (
-          <div className="bg-zinc-900/50 border border-zinc-800/50 p-4 rounded-lg text-sm text-zinc-400">
-            O estoque mudará de <span className="font-medium text-zinc-300">{selectedProduct.currentStock}</span> para <span className="font-medium text-zinc-300">{qty}</span>.
-            Diferença: <span className="font-medium text-zinc-300">{parseFloat(qty) - selectedProduct.currentStock}</span>.
+        </form>
+      ) : (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex-1 flex flex-col items-center justify-center p-8 text-center"
+        >
+          <div className="w-24 h-24 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-500 mb-6 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
+              <Check size={48} strokeWidth={1.5} />
+            </motion.div>
           </div>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-1.5">Motivo / Observação</label>
-          <textarea 
-            rows={3}
-            required
-            value={reason}
-            onChange={e => setReason(e.target.value)}
-            placeholder="Ex: Torra lote #10, Quebra na embalagem..."
-            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700 resize-none"
-          />
-        </div>
-
-      </form>
+          <h3 className="text-2xl font-heading font-semibold text-zinc-100 mb-2">Movimentação Salva</h3>
+          <p className="text-zinc-400 max-w-sm">
+            O estoque físico e o histórico foram ajustados.
+          </p>
+        </motion.div>
+      )}
     </Drawer>
   );
 }

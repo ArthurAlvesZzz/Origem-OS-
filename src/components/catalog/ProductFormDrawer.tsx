@@ -6,6 +6,8 @@ import { useRepositories } from '../../repositories/RepositoryProvider';
 import { Drawer } from '../ui/Drawer';
 import { Button } from '../ui/Button';
 import { useToast } from '../../components/ui/Toast';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
 
 interface ProductFormDrawerProps {
   onClose: () => void;
@@ -110,107 +112,104 @@ export function ProductFormDrawer({ onClose, onComplete, product }: ProductFormD
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-1.5">Nome do Produto</label>
-            <input 
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Nome do Produto</label>
+            <Input 
               type="text" 
               required
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700" 
               placeholder="Ex: Cerrado Natural 250g"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">SKU</label>
-              <input 
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">SKU</label>
+              <Input 
                 type="text" 
                 required
                 value={formData.sku}
                 onChange={e => setFormData({ ...formData, sku: e.target.value })}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700 uppercase" 
+                className="uppercase font-mono" 
                 placeholder="EX-PROD-250"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Categoria</label>
-              <select
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Categoria</label>
+              <Select
                 value={formData.category}
                 onChange={e => setFormData({ ...formData, category: e.target.value })}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700"
               >
                 <option value="Café Torrado">Café Torrado</option>
                 <option value="Insumo">Insumo</option>
                 <option value="Acessório">Acessório</option>
                 <option value="Embalagem">Embalagem</option>
-              </select>
+              </Select>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Unidade</label>
-              <select
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Unidade</label>
+              <Select
                 value={formData.unit}
                 onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700"
               >
                 <option value="un">Unidade (un)</option>
                 <option value="kg">Quilo (kg)</option>
                 <option value="g">Grama (g)</option>
                 <option value="l">Litro (l)</option>
-              </select>
+              </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Estoque Mínimo</label>
-              <input 
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Estoque Mínimo</label>
+              <Input 
                 type="number" 
                 required
                 min="0"
                 value={formData.minStock}
                 onChange={e => setFormData({ ...formData, minStock: e.target.value })}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700 tabular-nums" 
+                className="tabular-nums" 
               />
             </div>
           </div>
         </div>
 
         <div className="pt-4 border-t border-zinc-800/50 space-y-4">
-          <h3 className="text-sm font-medium text-zinc-300">Precificação</h3>
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-zinc-300">Precificação</h3>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Custo (R$)</label>
-              <input 
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Custo (R$)</label>
+              <Input 
                 type="number" 
                 step="0.01"
                 min="0"
                 required
                 value={formData.cost}
                 onChange={e => setFormData({ ...formData, cost: e.target.value })}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700 tabular-nums" 
+                className="tabular-nums font-mono text-lg" 
                 placeholder="0.00"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-1.5">Preço Venda (R$)</label>
-              <input 
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Preço Venda (R$)</label>
+              <Input 
                 type="number" 
                 step="0.01"
                 min="0"
                 required
                 value={formData.price}
                 onChange={e => setFormData({ ...formData, price: e.target.value })}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-50 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zinc-700 tabular-nums" 
+                className="tabular-nums font-mono text-lg text-emerald-400" 
                 placeholder="0.00"
               />
             </div>
           </div>
 
-          <div className="bg-zinc-900 p-4 rounded-lg flex items-center justify-between">
-            <span className="text-sm text-zinc-400">Margem Estimada</span>
-            <span className={`text-lg font-semibold tabular-nums ${parseFloat(marginStr) > 30 ? 'text-emerald-400' : parseFloat(marginStr) > 10 ? 'text-amber-400' : 'text-red-400'}`}>
+          <div className="bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Margem Estimada</span>
+            <span className={`text-xl font-mono tracking-tighter font-bold ${parseFloat(marginStr) > 30 ? 'text-emerald-400' : parseFloat(marginStr) > 10 ? 'text-amber-400' : 'text-red-400'}`}>
               {marginStr}%
             </span>
           </div>

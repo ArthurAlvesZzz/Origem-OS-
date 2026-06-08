@@ -6,6 +6,11 @@ import { PublicLotTrace } from '../../../domain/types';
 import QRCode from 'react-qr-code';
 import { PrintLabel } from './PrintLabel';
 import { useToast } from '../../../components/ui/Toast';
+import { Drawer } from '../../ui/Drawer';
+import { Button } from '../../ui/Button';
+import { Select } from '../../ui/Select';
+import { Input } from '../../ui/Input';
+import { Textarea } from '../../ui/Textarea';
 
 interface TraceabilityDrawerProps {
   traceId?: string;
@@ -112,35 +117,66 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm print:bg-transparent print:backdrop-blur-none">
-      <div className="w-full max-w-lg bg-zinc-950 h-full shadow-2xl border-l border-zinc-800 flex flex-col print:shadow-none print:border-none print:w-auto print:max-w-none print:bg-white">
-        <div className="flex items-center justify-between p-6 border-b border-zinc-800 no-print">
-          <h2 className="text-lg font-heading font-semibold text-zinc-50">
-            {isCreating ? 'Novo Rastreio' : 'Detalhes do Rastreio'}
-          </h2>
-          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800 rounded-lg transition-colors">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="flex-1 p-6 space-y-6 print:p-0 print:space-y-0 overflow-y-auto print:overflow-visible">
-          {/* Form inside a wrapper with no-print */}
-          <div className="space-y-6 no-print">
+    <>
+      <Drawer
+        isOpen={true}
+        onClose={onClose}
+        title={isCreating ? 'Novo Rastreio' : 'Detalhes do Rastreio'}
+        size="md"
+        footer={
+          <div className="w-full space-y-4">
+            <Button
+              variant="conclusive"
+              onClick={handleSave}
+              disabled={loading || (isCreating && !selectedReviewId)}
+              isLoading={loading}
+              className="w-full gap-2 px-8 h-12"
+            >
+              {!loading && <Save size={20} />}
+              Salvar Detalhes
+            </Button>
+            
+            {!isCreating && trace && (
+              <div className="grid grid-cols-2 gap-4">
+                {trace.status !== 'published' ? (
+                  <Button
+                    variant="outline"
+                    onClick={handlePublish}
+                    disabled={loading}
+                    className="w-full h-12 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 border-emerald-500/20"
+                  >
+                    Publicar Lote
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={handleUnpublish}
+                    disabled={loading}
+                    className="w-full h-12 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border-rose-500/20"
+                  >
+                    Despublicar Lote
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        }
+      >
+        <div className="space-y-6 no-print">
             {isCreating && (
               <div className="space-y-4">
-                 <label className="block text-sm font-medium text-zinc-400">Selecionar Lote (Quality Review Aprovado)</label>
-               <select
+                 <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Selecionar Lote (Quality Review Aprovado)</label>
+               <Select
                  value={selectedReviewId}
                  onChange={e => setSelectedReviewId(e.target.value)}
-                 className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-50"
                >
-                 <option value="">Selecione...</option>
+                 <option value="" disabled>Selecione...</option>
                  {approvedReviews.map(r => (
                    <option key={r.id} value={r.id}>
                       CQ#{r.id.substring(0,6)} - Score: {r.scoreTotal}
                    </option>
                  ))}
-               </select>
+               </Select>
                {approvedReviews.length === 0 && (
                  <p className="text-xs text-amber-500 flex items-center gap-1"><AlertTriangle size={14} /> Nenhum lote aprovado no CQ.</p>
                )}
@@ -151,11 +187,11 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl space-y-4">
               <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                  <div>
-                   <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium mb-1">Código Público</p>
+                   <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Código Público</p>
                    <p className="font-mono text-zinc-200 text-lg">{trace.publicCode}</p>
                  </div>
                  <div className="text-right">
-                   <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium mb-1">Status</p>
+                   <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Status</p>
                    {trace.status === 'published' ? (
                      <span className="text-emerald-400 text-sm font-medium flex items-center gap-1"><CheckCircle2 size={16}/> Publicado</span>
                    ) : trace.status === 'unpublished' ? (
@@ -177,22 +213,24 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
                      />
                    </div>
                    
-                   <p className="text-xs text-zinc-500 uppercase font-medium mb-2 w-full text-left">Link Público</p>
+                   <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2 w-full text-left">Link Público</p>
                    <div className="flex w-full items-center gap-2 mb-4">
-                      <input 
+                      <Input 
                          type="text" 
                          readOnly
                          value={`${window.location.origin}/lote/${trace.publicCode}`}
-                         className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 font-mono"
+                         className="flex-1 font-mono text-xs"
                       />
-                      <button 
+                      <Button 
+                        variant="secondary"
                         onClick={() => navigator.clipboard.writeText(`${window.location.origin}/lote/${trace.publicCode}`)}
-                        className="bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center shrink-0"
+                        className="shrink-0 h-11 px-3"
                         title="Copiar"
                       >
                          Copiar
-                      </button>
-                      <button 
+                      </Button>
+                      <Button 
+                        variant="secondary"
                         onClick={() => {
                           const svg = document.getElementById("QRCodePreview");
                           if (!svg) return;
@@ -216,95 +254,59 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
                           };
                           img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
                         }}
-                        className="bg-zinc-800 hover:bg-zinc-700 text-amber-500 px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center shrink-0"
+                        className="shrink-0 h-11 px-3 text-amber-500"
                         title="Baixar QR (PNG)"
                       >
                          PNG
-                      </button>
-                      <a 
-                        href={`/lote/${trace.publicCode}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-colors shrink-0"
+                      </Button>
+                      <Button 
+                        variant="conclusive"
+                        onClick={() => window.open(`/lote/${trace.publicCode}`, '_blank')}
+                        className="shrink-0 h-11 px-3"
                       >
                          <ExternalLink size={14} />
-                      </a>
+                      </Button>
                    </div>
                    
-                   <button 
+                   <Button 
+                     variant="outline"
                      onClick={() => window.print()}
-                     className="w-full border py-3 rounded-lg text-sm font-bold border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                     className="w-full h-12"
                    >
                      Imprimir Etiqueta (QR Code)
-                   </button>
+                   </Button>
                 </div>
               )}
             </div>
           )}
 
           <div className="space-y-4">
-             <label className="block text-sm font-medium text-zinc-400">Título Público</label>
-             <input
+             <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Título Público</label>
+             <Input
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Ex: Cerrado Ouro - Safra 2024"
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-50"
              />
           </div>
           
           <div className="space-y-4">
-             <label className="block text-sm font-medium text-zinc-400">Resumo / História (Opcional)</label>
-             <textarea
+             <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Resumo / História (Opcional)</label>
+             <Textarea
                 value={summary}
                 onChange={e => setSummary(e.target.value)}
                 rows={4}
                 placeholder="Conte a história deste lote..."
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-50 resize-none"
+                className="resize-none"
              />
           </div>
-          
-          </div>{/* Close no-print wrapper */}
-
-          {/* Hidden label for printing - now OUTSIDE the no-print wrapper! */}
-          {!isCreating && trace && trace.status === 'published' && (
-            <PrintLabel trace={trace} size="small" />
-          )}
-
         </div>
 
-        <div className="p-6 border-t border-zinc-800 bg-zinc-950 space-y-4 no-print">
-          <button
-            onClick={handleSave}
-            disabled={loading || (isCreating && !selectedReviewId)}
-            className="w-full bg-zinc-100 hover:bg-white text-zinc-900 px-4 py-3 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            <Save size={18} /> {loading ? 'Salvando...' : 'Salvar Detalhes'}
-          </button>
-          
-          {!isCreating && trace && (
-            <div className="grid grid-cols-2 gap-4">
-              {trace.status !== 'published' ? (
-                <button
-                  onClick={handlePublish}
-                  disabled={loading}
-                  className="w-full bg-emerald-600/20 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-600/30 px-4 py-3 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
-                >
-                  Publicar Lote
-                </button>
-              ) : (
-                <button
-                  onClick={handleUnpublish}
-                  disabled={loading}
-                  className="w-full bg-rose-600/20 text-rose-500 border border-rose-500/20 hover:bg-rose-600/30 px-4 py-3 rounded-xl text-sm font-bold transition-colors disabled:opacity-50"
-                >
-                  Despublicar Lote
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+        {/* Hidden label for printing - now OUTSIDE the no-print wrapper! */}
+        {!isCreating && trace && trace.status === 'published' && (
+          <PrintLabel trace={trace} size="small" />
+        )}
+      </Drawer>
+    </>
   );
 }

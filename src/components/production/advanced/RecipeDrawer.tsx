@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRepositories } from '../../../repositories/RepositoryProvider';
 import { ProductionRecipeRecord, GreenCoffeeLotRecord } from '../../../repositories/interfaces/IAdvancedProductionRepository';
-import { X, Save, Plus, Trash } from 'lucide-react';
+import { Save, Plus, Trash, BookOpen } from 'lucide-react';
 import { useToast } from '../../../components/ui/Toast';
+import { Drawer } from '../../ui/Drawer';
+import { Button } from '../../ui/Button';
+import { Input } from '../../ui/Input';
+import { Select } from '../../ui/Select';
 
 interface RecipeDrawerProps {
   onClose: () => void;
@@ -22,7 +26,7 @@ export function RecipeDrawer({ onClose, onSuccess }: RecipeDrawerProps) {
 
   useEffect(() => {
     advancedProductionRepo.getGreenLots().then(setLots);
-  }, []);
+  }, [advancedProductionRepo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,125 +88,136 @@ export function RecipeDrawer({ onClose, onSuccess }: RecipeDrawerProps) {
   const estimatedCostPerKgOut = rawCostPerKgOut + totalExtras + (formData.defaultCostPerHour || 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-zinc-950 border-l border-zinc-800 h-full flex flex-col pt-16 md:pt-0">
-        <div className="flex items-center justify-between p-6 border-b border-zinc-800 bg-zinc-950 sticky top-0 z-10 w-full overflow-hidden">
+    <Drawer
+      isOpen={true}
+      onClose={onClose}
+      title="Nova Receita / Ficha Técnica"
+      subtitle="Configure o blend e insumos."
+      icon={<BookOpen size={20} />}
+      size="md"
+      footer={
+        <div className="flex flex-col w-full gap-4">
+          <div className="flex justify-between items-center bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl">
+             <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">Custo Estimado (R$/Kg)</span>
+             <span className="text-xl font-mono text-emerald-400 font-bold tracking-tight">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(estimatedCostPerKgOut)}</span>
+          </div>
+          <Button 
+            type="submit" 
+            form="recipe-form" 
+            variant="conclusive" 
+            size="lg" 
+            disabled={loading} 
+            isLoading={loading}
+            className="w-full gap-2 text-[15px]"
+          >
+            {!loading && <Save size={18} />}
+            Salvar Receita
+          </Button>
+        </div>
+      }
+    >
+      <form id="recipe-form" onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Nome da Receita *</label>
+          <Input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ex: Blend Clássico 500g"/>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <h2 className="text-xl font-medium text-white">Nova Receita / Ficha Técnica</h2>
-            <p className="text-sm text-zinc-400 mt-1">Configure o blend e insumos.</p>
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">ID Produto (SKU)</label>
+              <Input type="text" required value={formData.productId} onChange={e => setFormData({ ...formData, productId: e.target.value })} />
           </div>
-          <button onClick={onClose} className="p-2 text-zinc-400 hover:text-white bg-zinc-900 rounded-full transition-colors flex-shrink-0">
-            <X size={20} />
-          </button>
+          <div>
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Rendimento (%)</label>
+              <Input type="number" step="0.01" min="0" max="1" required value={formData.targetYield} onChange={e => setFormData({ ...formData, targetYield: parseFloat(e.target.value) })} />
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-          <form id="recipe-form" onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">Nome da Receita *</label>
-              <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:outline-none focus:border-amber-500 transition-colors" placeholder="Ex: Blend Clássico 500g"/>
+        <div className="border border-zinc-800 p-5 rounded-xl bg-zinc-900/40">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-widest text-zinc-300">Grãos Verdes (Blend)</h4>
+              <Button type="button" variant="ghost" size="sm" onClick={addInput} className="text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 gap-1 h-8 text-[11px]">
+                  <Plus size={14}/> Adicionar Grão
+              </Button>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                 <label className="block text-sm font-medium text-zinc-300 mb-1">ID Produto Final (SKU)</label>
-                 <input type="text" required value={formData.productId} onChange={e => setFormData({ ...formData, productId: e.target.value })} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white" />
-              </div>
-              <div>
-                 <label className="block text-sm font-medium text-zinc-300 mb-1">Rendimento Esperado (%)</label>
-                 <input type="number" step="0.01" min="0" max="1" required value={formData.targetYield} onChange={e => setFormData({ ...formData, targetYield: parseFloat(e.target.value) })} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white" />
-              </div>
-            </div>
-
-            <div className="border border-zinc-800 p-4 rounded-xl bg-zinc-900">
-               <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium text-white">Adicionar Grãos Verdes (Blend)</h4>
-                  <button type="button" onClick={addInput} className="text-amber-500 text-xs font-medium hover:text-amber-400 flex items-center gap-1">
-                     <Plus size={14}/> Insumo
-                  </button>
-               </div>
-               
-               <div className="space-y-3">
-                 {(!formData.inputs || formData.inputs.length === 0) && (
-                    <div className="text-xs text-zinc-500">Nenhum grão verde adicionado ao blend.</div>
-                 )}
-                 {formData.inputs?.map((input, index) => (
-                    <div key={input.id} className="flex gap-2 items-center">
-                       <select value={input.greenLotId} onChange={e => {
-                         const newInputs = [...(formData.inputs || [])];
-                         newInputs[index].greenLotId = e.target.value;
-                         setFormData({ ...formData, inputs: newInputs });
-                       }} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-white text-xs focus:outline-none">
-                          <option value="">Selecione o Lote</option>
-                          {lots.map(l => <option key={l.id} value={l.id}>{l.name} ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(l.costPerKg)}/kg)</option>)}
-                       </select>
-                       <input type="number" step="0.01" value={input.percent} onChange={e => {
-                         const newInputs = [...(formData.inputs || [])];
-                         newInputs[index].percent = parseFloat(e.target.value) || 0;
-                         setFormData({ ...formData, inputs: newInputs });
-                       }} className="w-16 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-white text-xs" placeholder="Kg" title="Kg de insumo para compor a receita de 1kg" />
-                       <button type="button" onClick={() => removeInput(input.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                          <Trash size={14} />
-                       </button>
+            
+            <div className="space-y-3">
+              {(!formData.inputs || formData.inputs.length === 0) && (
+                <div className="text-xs text-zinc-500 p-4 border border-dashed border-zinc-800 rounded-lg text-center">Nenhum grão verde adicionado.</div>
+              )}
+              {formData.inputs?.map((input, index) => (
+                <div key={input.id} className="flex gap-2 items-start">
+                    <Select value={input.greenLotId} onChange={e => {
+                      const newInputs = [...(formData.inputs || [])];
+                      newInputs[index].greenLotId = e.target.value;
+                      setFormData({ ...formData, inputs: newInputs });
+                    }} className="flex-1">
+                      <option value="" disabled>Selecione o Lote</option>
+                      {lots.map(l => <option key={l.id} value={l.id}>{l.name} ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(l.costPerKg)}/kg)</option>)}
+                    </Select>
+                    
+                    <div className="w-24">
+                      <Input type="number" step="0.01" value={input.percent} onChange={e => {
+                        const newInputs = [...(formData.inputs || [])];
+                        newInputs[index].percent = parseFloat(e.target.value) || 0;
+                        setFormData({ ...formData, inputs: newInputs });
+                      }} placeholder="Kg p/ 1kg" className="font-mono text-sm tabular-nums text-center" />
                     </div>
-                 ))}
-               </div>
-            </div>
 
-            <div className="border border-zinc-800 p-4 rounded-xl bg-zinc-900">
-               <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium text-white">Custos Extras</h4>
-                  <button type="button" onClick={addExtra} className="text-emerald-500 text-xs font-medium hover:text-emerald-400 flex items-center gap-1">
-                     <Plus size={14}/> Extra
-                  </button>
-               </div>
-               
-               <div className="space-y-3">
-                 {(!formData.extras || formData.extras.length === 0) && (
-                    <div className="text-xs text-zinc-500">Nenhum custo extra mapeado.</div>
-                 )}
-                 {formData.extras?.map((extra, index) => (
-                    <div key={extra.id} className="flex gap-2 items-center">
-                       <input type="text" value={extra.itemName} onChange={e => {
-                         const newExtras = [...(formData.extras || [])];
-                         newExtras[index].itemName = e.target.value;
-                         setFormData({ ...formData, extras: newExtras });
-                       }} className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-white text-xs" placeholder="Embalagem, Energia..." />
-                       <input type="number" step="0.01" value={extra.cost} onChange={e => {
-                         const newExtras = [...(formData.extras || [])];
-                         newExtras[index].cost = parseFloat(e.target.value) || 0;
-                         setFormData({ ...formData, extras: newExtras });
-                       }} className="w-20 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-white text-xs" placeholder="Custo R$" />
-                       <button type="button" onClick={() => removeExtra(extra.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
-                          <Trash size={14} />
-                       </button>
+                    <Button type="button" variant="danger" size="icon" onClick={() => removeInput(input.id)} className="shrink-0 h-11 w-11 mt-0">
+                      <Trash size={16} />
+                    </Button>
+                </div>
+              ))}
+            </div>
+        </div>
+
+        <div className="border border-zinc-800 p-5 rounded-xl bg-zinc-900/40">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-widest text-zinc-300">Custos Extras Por Kg</h4>
+              <Button type="button" variant="ghost" size="sm" onClick={addExtra} className="text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-1 h-8 text-[11px]">
+                  <Plus size={14}/> Add Extra
+              </Button>
+            </div>
+            
+            <div className="space-y-3">
+              {(!formData.extras || formData.extras.length === 0) && (
+                <div className="text-xs text-zinc-500 p-4 border border-dashed border-zinc-800 rounded-lg text-center">Nenhum custo extra mapeado.</div>
+              )}
+              {formData.extras?.map((extra, index) => (
+                <div key={extra.id} className="flex gap-2 items-center">
+                    <Input type="text" value={extra.itemName} onChange={e => {
+                      const newExtras = [...(formData.extras || [])];
+                      newExtras[index].itemName = e.target.value;
+                      setFormData({ ...formData, extras: newExtras });
+                    }} placeholder="Embalagem, Energia..." className="flex-1" />
+                    
+                    <div className="w-28 relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">R$</span>
+                      <Input type="number" step="0.01" value={extra.cost} onChange={e => {
+                        const newExtras = [...(formData.extras || [])];
+                        newExtras[index].cost = parseFloat(e.target.value) || 0;
+                        setFormData({ ...formData, extras: newExtras });
+                      }} className="pl-8 font-mono tabular-nums text-sm" />
                     </div>
-                 ))}
-               </div>
-               
-               <div className="mt-4 pt-4 border-t border-zinc-800 flex items-center justify-between">
-                  <label className="block text-sm font-medium text-zinc-300">Custo Mão de Obra Fixo / H</label>
-                  <input type="number" step="0.01" value={formData.defaultCostPerHour} onChange={e => setFormData({ ...formData, defaultCostPerHour: parseFloat(e.target.value) || 0 })} className="w-24 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-white text-xs" placeholder="R$" />
-               </div>
+
+                    <Button type="button" variant="danger" size="icon" onClick={() => removeExtra(extra.id)} className="shrink-0 h-11 w-11 mt-0">
+                      <Trash size={16} />
+                    </Button>
+                </div>
+              ))}
             </div>
-
-          </form>
+            
+            <div className="mt-5 pt-5 border-t border-zinc-800/50 flex items-center justify-between">
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-400">Mão de Obra Fixo / H (R$)</label>
+              <div className="w-28 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">R$</span>
+                <Input type="number" step="0.01" value={formData.defaultCostPerHour} onChange={e => setFormData({ ...formData, defaultCostPerHour: parseFloat(e.target.value) || 0 })} className="pl-8 font-mono tabular-nums text-sm" />
+              </div>
+            </div>
         </div>
 
-        <div className="p-6 border-t border-zinc-800 bg-zinc-950 flex flex-col gap-4 sticky bottom-0">
-          <div className="flex justify-between items-center bg-zinc-900 border border-zinc-800 p-3 rounded-lg">
-             <span className="text-sm text-zinc-400 font-medium">Custo Estimado (R$/Kg Torrado):</span>
-             <span className="text-lg text-emerald-400 font-semibold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(estimatedCostPerKgOut)}</span>
-          </div>
-          <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-3 rounded-lg font-medium text-zinc-300 bg-zinc-900 hover:bg-zinc-800 transition-colors">Cancelar</button>
-            <button type="submit" form="recipe-form" disabled={loading} className="flex-1 px-4 py-3 rounded-lg font-medium text-zinc-950 bg-amber-500 hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? 'Salvando...' : <><Save size={18} /> Salvar Receita</>}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      </form>
+    </Drawer>
   );
 }

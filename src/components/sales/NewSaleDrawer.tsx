@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingBag, CreditCard, Check } from 'lucide-react';
+import { ShoppingBag, CreditCard, Check, Plus } from 'lucide-react';
 import { ProductSearch } from './ProductSearch';
 import { SaleCart } from './SaleCart';
 import { PaymentSelector } from './PaymentSelector';
@@ -12,6 +12,8 @@ import { Drawer } from '../ui/Drawer';
 import { motion, AnimatePresence } from 'motion/react';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { useToast } from '../ui/Toast';
+import { Select } from '../ui/Select';
+import { Input } from '../ui/Input';
 
 interface NewSaleDrawerProps {
   onClose: () => void;
@@ -30,8 +32,8 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
   
   const { orderRepo, inventoryRepo, financialRepo, customerRepo, settingsRepo } = useRepositories();
   const [customers, setCustomers] = useState<{id: string, name: string}[]>([]);
-  const confirm = useConfirm();
-  const { error, success } = useToast();
+  const { confirm } = useConfirm();
+  const { error: toastError, success } = useToast();
 
   useEffect(() => {
     customerRepo.getCustomers().then(all => {
@@ -209,29 +211,28 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
         <div className="space-y-6">
           {/* Customer Selection */}
           <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
-            <label className="block text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">Identificação do Cliente</label>
-            <select 
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Identificação do Cliente</label>
+            <Select 
               value={customerId}
               onChange={e => setCustomerId(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-colors appearance-none cursor-pointer"
             >
               <option value="">👤 Cliente Balcão (Consumidor Final)</option>
               {customers.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
-            </select>
+            </Select>
           </section>
 
           {/* Add Product */}
           <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
-            <label className="block text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">Buscar Produtos (SKU ou Nome)</label>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Buscar Produtos (SKU ou Nome)</label>
             <ProductSearch onSelectProduct={handleSelectProduct} />
           </section>
 
           {/* Cart */}
           <section className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-zinc-800/50">
-              <label className="block text-sm font-semibold text-zinc-100">Itens do Pedido</label>
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-300">Itens do Pedido</label>
               <span className="text-[11px] font-mono font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20 px-2 py-0.5 rounded uppercase tracking-wider">{items.length} itens</span>
             </div>
             <div className="min-h-[100px]">
@@ -257,7 +258,7 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
               >
                 <div className="flex items-center gap-2 mb-2 pb-3 border-b border-zinc-800/50">
                   <CreditCard size={18} className="text-amber-500" />
-                  <label className="block text-sm font-semibold text-zinc-100">Condições de Pagamento</label>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-300">Condições de Pagamento</label>
                 </div>
                 <PaymentSelector 
                   method={method} 
@@ -267,12 +268,11 @@ export function NewSaleDrawer({ onClose, onComplete }: NewSaleDrawerProps) {
                 />
                 {status === 'Pendente' && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4 border-t border-zinc-800/50">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Data de Vencimento Previsão</label>
-                    <input 
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 mb-3">Data de Vencimento Previsão</label>
+                    <Input 
                       type="date"
                       value={dueDate}
                       onChange={e => setDueDate(e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors" 
                     />
                   </motion.div>
                 )}

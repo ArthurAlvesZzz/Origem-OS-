@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { CrmConversationRecord, CrmMessageRecord } from '../../repositories/interfaces/ICrmRepository';
 import { MessageSquare, Users, CheckCircle2, Send, Phone } from 'lucide-react';
 import { ICrmRepository } from '../../repositories/interfaces/ICrmRepository';
+import { Select } from '../ui/Select';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
 
 interface CrmInboxTabProps {
     conversations: CrmConversationRecord[];
@@ -45,15 +48,16 @@ export function CrmInboxTab({ conversations, crmRepo, onRefresh }: CrmInboxTabPr
                     <h3 className="font-heading font-medium text-zinc-100 flex items-center gap-2">
                         <MessageSquare size={16} className="text-[#C59868]" /> Caixa de Entrada
                     </h3>
-                    <select 
-                        value={inboxStatusFilter} 
-                        onChange={e => setInboxStatusFilter(e.target.value)}
-                        className="bg-zinc-900 border border-zinc-800 rounded-lg text-xs text-zinc-300 px-2 py-1 outline-none focus:border-[#C59868]"
-                    >
-                        <option value="all">Todas</option>
-                        <option value="open">Ativas</option>
-                        <option value="resolved">Resolvidas</option>
-                    </select>
+                    <div className="w-32">
+                        <Select
+                            value={inboxStatusFilter} 
+                            onChange={e => setInboxStatusFilter(e.target.value)}
+                        >
+                            <option value="all">Todas</option>
+                            <option value="open">Ativas</option>
+                            <option value="resolved">Resolvidas</option>
+                        </Select>
+                    </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                     {filteredConvs.length === 0 ? (
@@ -87,9 +91,14 @@ export function CrmInboxTab({ conversations, crmRepo, onRefresh }: CrmInboxTabPr
                             </h3>
                             <div className="flex gap-2">
                                 {selectedConvObj?.status !== 'resolved' && (
-                                    <button onClick={() => handleResolve(selectedConversationId)} className="text-[10px] font-bold tracking-widest bg-[#528F65]/10 hover:bg-[#528F65]/20 text-[#528F65] px-4 py-2 rounded-lg transition-colors flex items-center gap-1 uppercase">
+                                    <Button 
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleResolve(selectedConversationId)} 
+                                        className="text-[10px] font-bold tracking-widest bg-[#528F65]/10 hover:bg-[#528F65]/20 text-[#528F65] border-transparent transition-colors flex items-center gap-1 uppercase"
+                                    >
                                         <CheckCircle2 size={14}/> Resolver
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         </div>
@@ -107,20 +116,22 @@ export function CrmInboxTab({ conversations, crmRepo, onRefresh }: CrmInboxTabPr
                                 </div>
                             ))}
                         </div>
-                        <div className="p-4 border-t border-zinc-800 bg-zinc-950/50">
-                            <div className="flex gap-2.5 relative items-center">
-                                <input 
-                                    type="text" 
-                                    value={newMessage} 
-                                    onChange={e => setNewMessage(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                                    placeholder={selectedConvObj?.status === 'resolved' ? "Chat fechado. Digite para reabrir..." : "Digite uma mensagem..."}
-                                    className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 focus:outline-none focus:border-[#C59868] transition-colors"
-                                />
-                                <button onClick={handleSendMessage} className="bg-[#C59868] hover:bg-[#b08558] text-[#100C08] font-bold p-3 rounded-xl flex items-center justify-center transition-colors">
-                                    <Send size={18} />
-                                </button>
-                            </div>
+                        <div className="p-4 border-t border-zinc-800 bg-zinc-950/50 flex gap-3 relative items-center">
+                            <Input 
+                                type="text" 
+                                value={newMessage} 
+                                onChange={e => setNewMessage(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+                                placeholder={selectedConvObj?.status === 'resolved' ? "Chat fechado. Digite para reabrir..." : "Digite uma mensagem..."}
+                                className="flex-1"
+                            />
+                            <Button 
+                                variant="conclusive"
+                                onClick={handleSendMessage} 
+                                className="h-10 px-4"
+                            >
+                                <Send size={16} />
+                            </Button>
                         </div>
                     </>
                 ) : (

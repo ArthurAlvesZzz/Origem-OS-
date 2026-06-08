@@ -8,6 +8,7 @@ import { Customer } from '../domain/types';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
 import { Drawer } from '../components/ui/Drawer';
 import { useToast } from '../components/ui/Toast';
 import { Pagination } from '../components/ui/Pagination';
@@ -86,18 +87,19 @@ export function Clientes() {
              onChange={(e) => setSearchTerm(e.target.value)}
            />
          </div>
-         <select 
-           value={filterType}
-           onChange={(e) => setFilterType(e.target.value)}
-           className="bg-zinc-950 border border-zinc-800/80 text-zinc-300 text-sm font-medium rounded-xl px-4 py-2.5 outline-none hover:border-zinc-700 focus:border-amber-500/50 transition-colors sm:w-64 cursor-pointer"
-         >
-           <option value="todos">Todos os Contatos (Ativos)</option>
-           <option value="b2c">Clientes Final (B2C)</option>
-           <option value="b2b">Clientes Atacado (B2B)</option>
-           <option value="partner">Parceiros (Consignação)</option>
-           <option value="supplier">Fornecedores</option>
-           <option value="bloqueados">Bloqueados / Inativos</option>
-         </select>
+         <div className="sm:w-64">
+           <Select 
+             value={filterType}
+             onChange={(e) => setFilterType(e.target.value)}
+           >
+             <option value="todos">Todos os Contatos (Ativos)</option>
+             <option value="b2c">Clientes Final (B2C)</option>
+             <option value="b2b">Clientes Atacado (B2B)</option>
+             <option value="partner">Parceiros (Consignação)</option>
+             <option value="supplier">Fornecedores</option>
+             <option value="bloqueados">Bloqueados / Inativos</option>
+           </Select>
+         </div>
          <Button variant="outline" className="gap-2 sm:w-auto w-full justify-center" onClick={() => exportToCSV(filtered, 'clientes', [
           { key: 'name', label: 'Nome' },
           { key: 'email', label: 'E-mail' },
@@ -218,6 +220,7 @@ export function Clientes() {
 
 function CustomerDrawer({ customer, onClose, onSave }: { customer?: Customer, onClose: () => void, onSave: () => void }) {
   const { customerRepo } = useRepositories();
+  const { error: toastError, success } = useToast();
   const [saving, setSaving] = useState(false);
   
   // Basic states
@@ -316,30 +319,30 @@ function CustomerDrawer({ customer, onClose, onSave }: { customer?: Customer, on
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Categoria de Vínculo</label>
-            <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-amber-500/50 outline-none hover:border-zinc-700 transition-colors">
+            <Select value={type} onChange={e => setType(e.target.value)}>
               <option value="b2c">Cliente Final (B2C)</option>
               <option value="b2b">Cliente Atacado (B2B)</option>
               <option value="partner">Parceiro (Consignação)</option>
               <option value="supplier">Fornecedor</option>
-            </select>
+            </Select>
           </div>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Status Operacional</label>
-            <select value={status} onChange={e => setStatus(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-amber-500/50 outline-none hover:border-zinc-700 transition-colors">
+            <Select value={status} onChange={e => setStatus(e.target.value)}>
               <option value="active">Ativo (Liberado)</option>
               <option value="inactive">Inativo / Pausado</option>
               <option value="blocked">Bloqueado</option>
-            </select>
+            </Select>
           </div>
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Tipo de Documento Oficial</label>
-            <select value={documentType} onChange={e => setDocumentType(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-amber-500/50 outline-none hover:border-zinc-700 transition-colors">
+            <Select value={documentType} onChange={e => setDocumentType(e.target.value)}>
               <option value="none">Isento / Nenhum</option>
               <option value="cpf">CPF</option>
               <option value="cnpj">CNPJ</option>
-            </select>
+            </Select>
           </div>
 
           <div>
@@ -371,13 +374,13 @@ function CustomerDrawer({ customer, onClose, onSave }: { customer?: Customer, on
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Nível de Fidelidade (Tier)</label>
-                <select value={loyaltyLevel} onChange={e => setLoyaltyLevel(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800/80 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-amber-500/50 outline-none hover:border-zinc-700 transition-colors">
+                <Select value={loyaltyLevel} onChange={e => setLoyaltyLevel(e.target.value)}>
                   <option value="">Status Não Atribuído</option>
                   <option value="Bronze">Nível Bronze</option>
                   <option value="Prata">Nível Prata</option>
                   <option value="Ouro">Nível Ouro</option>
                   <option value="Black">Nível Black Exclusivo</option>
-                </select>
+                </Select>
               </div>
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">Score (Pontos Retidos)</label>

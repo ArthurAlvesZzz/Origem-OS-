@@ -8,6 +8,9 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
+import { Textarea } from '../components/ui/Textarea';
+import { Drawer } from '../components/ui/Drawer';
 import { QrCode, Link as LinkIcon, Plus, Store, Target, Settings, Layers, Package, ShoppingBag, Edit, Copy } from 'lucide-react';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { useConfirm } from '../components/ui/ConfirmDialog';
@@ -15,7 +18,7 @@ import { useToast } from '../components/ui/Toast';
 
 export function DigitalMenu() {
   const { digitalMenuRepo } = useRepositories();
-  const confirm = useConfirm();
+  const { confirm } = useConfirm();
   const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'items' | 'orders' | 'settings'>('overview');
   const [config, setConfig] = useState<DigitalMenuConfig | null>(null);
@@ -460,11 +463,11 @@ export function DigitalMenu() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Áreas de Entrega (JSON)</label>
-                  <textarea 
+                  <Textarea 
                     value={config?.deliveryZonesJson || ''} 
                     onChange={(e) => setConfig(prev => prev ? {...prev, deliveryZonesJson: e.target.value} : null)} 
                     placeholder='[{"name": "Centro", "fee": 5.0, "active": true}]'
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-300 font-mono text-xs focus:border-amber-500 focus:outline-none h-32 custom-scrollbar resize-none placeholder:text-zinc-700" 
+                    className="w-full text-xs h-32 resize-none" 
                   />
                 </div>
               </div>
@@ -473,10 +476,10 @@ export function DigitalMenu() {
                 <div className="bg-zinc-950/50 p-5 rounded-2xl border border-zinc-800">
                   <h4 className="text-sm font-medium text-zinc-100 mb-4 flex items-center gap-2"><Store size={16} className="text-amber-500" /> Gateway de Pagamento</h4>
                   <div className="mb-4">
-                    <select value={config?.paymentProvider || 'manual_pix'} onChange={(e) => setConfig(prev => prev ? {...prev, paymentProvider: e.target.value} : null)} className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-300 text-sm focus:border-amber-500 focus:outline-none appearance-none">
+                    <Select value={config?.paymentProvider || 'manual_pix'} onChange={(e) => setConfig(prev => prev ? {...prev, paymentProvider: e.target.value} : null)}>
                       <option value="manual_pix">PIX Manual (Validação Humana)</option>
                       <option value="mercadopago">Mercado Pago (Cartão & PIX Dinâmico)</option>
-                    </select>
+                    </Select>
                   </div>
                   
                   {(!config?.paymentProvider || config.paymentProvider === 'manual_pix') ? (
@@ -559,93 +562,96 @@ export function DigitalMenu() {
         </Card>
       )}
 
-      {/* Modifier Modal */}
-      {modifierModalOpen && activeItemForMod && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/80 backdrop-blur-sm p-4">
-              <div className="bg-zinc-950 w-full max-w-2xl rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
-                  <div className="p-6 border-b border-zinc-800/50 flex items-center justify-between">
-                      <div>
-                          <h2 className="text-xl font-heading font-medium text-zinc-50">Adicionais: <span className="text-amber-500">{activeItemForMod.name}</span></h2>
-                          <p className="text-sm text-zinc-400 mt-1">Configure variações e adicionais para forçar fluidez no PDV Web.</p>
+      <Drawer 
+        isOpen={modifierModalOpen} 
+        onClose={() => setModifierModalOpen(false)} 
+        title={activeItemForMod ? `Adicionais: ${activeItemForMod.name}` : 'Adicionais'}
+      >
+        <div className="flex-1 overflow-y-auto p-6 bg-zinc-900/50 custom-scrollbar">
+          {loadingMods ? (
+            <div className="text-sm text-amber-500 flex justify-center py-8 font-medium animate-pulse">Autenticando repositório...</div>
+          ) : (
+            <div className="space-y-6">
+              {activeItemMods.length === 0 ? (
+                <div className="text-center py-12 px-6 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-950/50">
+                  <p className="text-sm text-zinc-400 mb-6 font-medium">Nenhuma matriz de configuração definida.</p>
+                  <Button onClick={addModifierGroup} className="gap-2 shadow-lg shadow-amber-500/10">
+                    <Plus size={16} /> Inicializar Novo Grupo
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {activeItemMods.map(group => (
+                    <div key={group.id} className="bg-zinc-950 border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm">
+                      <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 bg-zinc-900/30">
+                        <div>
+                          <h3 className="font-semibold text-zinc-100">{group.name}</h3>
+                          <p className="text-[10px] text-zinc-500 font-mono tracking-widest mt-1 uppercase">Limites: Min {group.minSelections} - Max {group.maxSelections}</p>
+                        </div>
+                        <Button 
+                          variant="danger" size="sm"
+                          onClick={async () => {
+                            const proceed = await confirm({
+                              title: 'Atenção',
+                              description: 'Operação destrutiva: Remover grupo de modificado?',
+                              confirmText: 'Sim, Remover',
+                              isDestructive: true
+                            });
+                            if(proceed) {
+                              await digitalMenuRepo.deleteModifierGroup(group.id);
+                              setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod!.id));
+                            }
+                          }}
+                        >Dropar Grupo</Button>
                       </div>
-                      <button onClick={() => setModifierModalOpen(false)} className="text-zinc-500 hover:text-zinc-300 p-2 rounded-full hover:bg-zinc-800 transition-colors">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                  </div>
-                  
-                  <div className="flex-1 overflow-y-auto p-6 bg-zinc-900/50 custom-scrollbar">
-                      {loadingMods ? (
-                          <div className="text-sm text-amber-500 flex justify-center py-8 font-medium animate-pulse">Autenticando repositório...</div>
-                      ) : (
-                          <div className="space-y-6">
-                              {activeItemMods.length === 0 ? (
-                                  <div className="text-center py-12 px-6 border-2 border-dashed border-zinc-800 rounded-2xl bg-zinc-950/50">
-                                      <p className="text-sm text-zinc-400 mb-6 font-medium">Nenhuma matriz de configuração definida.</p>
-                                      <Button onClick={addModifierGroup} className="gap-2 shadow-lg shadow-amber-500/10">
-                                          <Plus size={16} /> Inicializar Novo Grupo
-                                      </Button>
-                                  </div>
-                              ) : (
-                                  <>
-                                      {activeItemMods.map(group => (
-                                          <div key={group.id} className="bg-zinc-950 border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm">
-                                              <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 bg-zinc-900/30">
-                                                  <div>
-                                                      <h3 className="font-semibold text-zinc-100">{group.name}</h3>
-                                                      <p className="text-[10px] text-zinc-500 font-mono tracking-widest mt-1 uppercase">Limites: Min {group.minSelections} - Max {group.maxSelections}</p>
-                                                  </div>
-                                                  <Button 
-                                                      variant="danger" size="sm"
-                                                      onClick={async () => {
-                                                          const proceed = await confirm({
-                                                            title: 'Atenção',
-                                                            description: 'Operação destrutiva: Remover grupo de modificado?',
-                                                            confirmText: 'Sim, Remover',
-                                                            type: 'danger'
-                                                          });
-                                                          if(proceed) {
-                                                              await digitalMenuRepo.deleteModifierGroup(group.id);
-                                                              setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod.id));
-                                                          }
-                                                      }}
-                                                  >Dropar Grupo</Button>
-                                              </div>
-                                              <div className="p-4 space-y-3">
-                                                  {group.options && group.options.map((opt:any) => (
-                                                      <div key={opt.id} className="flex justify-between items-center bg-zinc-900/50 py-2.5 px-4 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors">
-                                                          <span className="text-sm font-medium text-zinc-300">{opt.name}</span>
-                                                          <div className="flex items-center gap-6">
-                                                              <span className="text-xs font-mono font-medium text-amber-500">{formatBRL(opt.price)}</span>
-                                                              <button onClick={async () => {
-                                                                  await digitalMenuRepo.deleteModifierOption(opt.id);
-                                                                  setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod.id));
-                                                              }} className="text-xs text-red-500 hover:text-red-400 font-medium uppercase tracking-wider">Del</button>
-                                                          </div>
-                                                      </div>
-                                                  ))}
-                                                  <button onClick={() => addModifierOption(group.id)} className="w-full mt-3 py-3 border border-dashed border-zinc-800 hover:border-amber-500 text-zinc-500 hover:text-amber-500 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 font-medium bg-zinc-950/20 hover:bg-amber-500/5">
-                                                      <Plus size={16} /> Incluir Opção
-                                                  </button>
-                                              </div>
-                                          </div>
-                                      ))}
-                                      
-                                      <button onClick={addModifierGroup} className="w-full py-4 border border-zinc-800 hover:border-amber-500 hover:bg-amber-500/5 text-zinc-400 hover:text-amber-500 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 font-medium shadow-sm">
-                                          <Plus size={18} /> Alocar Novo Grupo
-                                      </button>
-                                  </>
-                              )}
+                      <div className="p-4 space-y-3">
+                        {group.options && group.options.map((opt:any) => (
+                          <div key={opt.id} className="flex justify-between items-center bg-zinc-900/50 py-2.5 px-4 rounded-lg border border-zinc-800 hover:border-zinc-700 transition-colors">
+                            <span className="text-sm font-medium text-zinc-300">{opt.name}</span>
+                            <div className="flex items-center gap-6">
+                              <span className="text-xs font-mono font-medium text-amber-500">{formatBRL(opt.price)}</span>
+                              <Button 
+                                variant="outline" size="sm" 
+                                className="h-6 text-[10px] px-2 text-red-500 border-red-500/20 hover:bg-red-500/10"
+                                onClick={async () => {
+                                  await digitalMenuRepo.deleteModifierOption(opt.id);
+                                  setActiveItemMods(await digitalMenuRepo.getModifiers(activeItemForMod!.id));
+                                }} 
+                              >
+                                Del
+                              </Button>
+                            </div>
                           </div>
-                      )}
-                  </div>
-                  <div className="p-6 border-t border-zinc-800/50 bg-zinc-950 flex justify-end">
-                      <Button onClick={() => setModifierModalOpen(false)}>
-                          Concluído
-                      </Button>
-                  </div>
-              </div>
-          </div>
-      )}
+                        ))}
+                        <Button 
+                          variant="outline" 
+                          onClick={() => addModifierOption(group.id)} 
+                          className="w-full mt-3 py-3 border border-dashed border-zinc-800 hover:border-amber-500 text-zinc-500 hover:text-amber-500 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 font-medium bg-zinc-950/20 hover:bg-amber-500/5"
+                        >
+                          <Plus size={16} /> Incluir Opção
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={addModifierGroup} 
+                    className="w-full py-4 border border-zinc-800 hover:border-amber-500 hover:bg-amber-500/5 text-zinc-400 hover:text-amber-500 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 font-medium shadow-sm"
+                  >
+                    <Plus size={18} /> Alocar Novo Grupo
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="p-6 border-t border-zinc-800/50 bg-zinc-950 flex justify-end">
+          <Button variant="primary" onClick={() => setModifierModalOpen(false)}>
+            Concluído
+          </Button>
+        </div>
+      </Drawer>
     </div>
   );
 }

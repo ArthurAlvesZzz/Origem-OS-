@@ -13,7 +13,7 @@ interface CrmCampaignsTabProps {
 export function CrmCampaignsTab({ crmRepo }: CrmCampaignsTabProps) {
     const [campaigns, setCampaigns] = useState<CrmCampaignRecord[]>([]);
     const [newCampaignName, setNewCampaignName] = useState('');
-    const confirm = useConfirm();
+    const { confirm } = useConfirm();
     const { success, error } = useToast();
 
     const loadData = async () => {

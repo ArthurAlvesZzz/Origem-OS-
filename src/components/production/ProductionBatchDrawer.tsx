@@ -9,6 +9,9 @@ import { Drawer } from '../ui/Drawer';
 import { motion } from 'motion/react';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { useToast } from '../ui/Toast';
+import { Select } from '../ui/Select';
+import { Input } from '../ui/Input';
+import { Textarea } from '../ui/Textarea';
 
 interface ProductionBatchDrawerProps {
   onClose: () => void;
@@ -39,7 +42,7 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
   const { productRepo, productionRepo, inventoryRepo, settingsRepo } = useRepositories();
   const [productsData, setProductsData] = useState<(Product & { currentStock: number })[]>([]);
 
-  const confirm = useConfirm();
+  const { confirm } = useConfirm();
   const { error, success } = useToast();
 
   useEffect(() => {
@@ -102,7 +105,7 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
     if (status === 'Concluído' && finalWNum > initialNum) {
        const proceed = await confirm({
          title: 'Atenção ao Peso',
-         message: 'Peso final está MAIOR que peso inicial. Deseja continuar?',
+         description: 'Peso final está MAIOR que peso inicial. Deseja continuar?',
          confirmText: 'Continuar',
          cancelText: 'Cancelar'
        });
@@ -120,7 +123,7 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
     if (warnings.length > 0) {
       const proceed = await confirm({
         title: 'Estoque insuficiente',
-        message: warnings.join('\n') + '\n\nDeseja realizar a produção mesmo assim? O estoque ficará negativo.',
+        description: warnings.join('\n') + '\n\nDeseja realizar a produção mesmo assim? O estoque ficará negativo.',
         confirmText: 'Sim, Finalizar',
         cancelText: 'Cancelar'
       });
@@ -222,17 +225,17 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
              </div>
              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 line-clamp-1">Produto Final</label>
-                  <select value={finalProductId} onChange={e => setFinalProductId(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors">
-                    <option value="">Selecione...</option>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Produto Final</label>
+                  <Select value={finalProductId} onChange={e => setFinalProductId(e.target.value)}>
+                    <option value="" disabled>Selecione...</option>
                     {availableProducts.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 line-clamp-1">Quantidade Produzida ({availableProducts.find(p => p.id === finalProductId)?.unit || 'un'})</label>
-                  <input type="number" value={finalQty} onChange={e => setFinalQty(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-amber-400 font-mono text-lg rounded-xl px-4 py-2 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors" placeholder="0" />
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Quantidade Produzida ({availableProducts.find(p => p.id === finalProductId)?.unit || 'un'})</label>
+                  <Input type="number" value={finalQty} onChange={e => setFinalQty(e.target.value)} className="text-amber-400 font-mono text-lg tabular-nums" placeholder="0" />
                 </div>
              </div>
           </section>
@@ -244,15 +247,16 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
              </div>
              <div className="flex flex-col sm:flex-row items-end gap-3">
                <div className="flex-1 w-full">
-                 <select value={inputId} onChange={e => setInputId(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
-                    <option value="">Buscar insumo...</option>
+                 <Select value={inputId} onChange={e => setInputId(e.target.value)}>
+                    <option value="" disabled>Buscar insumo...</option>
                     {insumos.map(p => (
                       <option key={p.id} value={p.id}>{p.name} (Est. {p.currentStock})</option>
                     ))}
-                  </select>
+                 </Select>
                </div>
-               <div className="w-full sm:w-28">
-                 <input type="number" placeholder="Qtd" value={inputQty} onChange={e => setInputQty(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 font-mono rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
+               <div className="w-full sm:w-28 relative">
+                 <Input type="number" placeholder="Qtd" value={inputQty} onChange={e => setInputQty(e.target.value)} className="font-mono tabular-nums pr-8" />
+                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs">{selectedInput?.unit || 'un'}</span>
                </div>
                <Button variant="secondary" onClick={handleAddInput} type="button" className="w-full sm:w-auto h-[46px] gap-2">
                  <Plus size={16}/> Incluir
@@ -281,12 +285,12 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
 
           <section className="grid grid-cols-2 gap-4">
              <div className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50">
-                <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Peso Verde Inicial (kg)</label>
-                <input type="number" value={initialWeight} onChange={e => setInitialWeight(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 font-mono text-lg rounded-xl px-4 py-2 focus:outline-none focus:border-amber-500" placeholder="0.0" />
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Peso Verde Inicial (kg)</label>
+                <Input type="number" value={initialWeight} onChange={e => setInitialWeight(e.target.value)} className="font-mono tabular-nums text-lg" placeholder="12.0" />
              </div>
              <div className="bg-zinc-900/40 p-4 rounded-2xl border border-zinc-800/50 relative overflow-hidden">
-                <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Peso Final Torrado (kg)</label>
-                <input type="number" value={finalWeight} onChange={e => setFinalWeight(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-amber-400 font-mono text-lg rounded-xl px-4 py-2 focus:outline-none focus:border-amber-500" placeholder="0.0" />
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Peso Final Torrado (kg)</label>
+                <Input type="number" value={finalWeight} onChange={e => setFinalWeight(e.target.value)} className="text-amber-400 font-mono tabular-nums text-lg" placeholder="10.2" />
                 
                 {parseFloat(finalWeight) > 0 && parseFloat(initialWeight) > 0 && (
                   <div className="absolute top-4 right-4 bg-amber-500/10 text-amber-500 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
@@ -297,24 +301,25 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
           </section>
 
           <section className="space-y-4 bg-zinc-900/40 p-5 rounded-2xl border border-zinc-800/50">
-             <h3 className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-2">3. Mão de Obra e Custos Extras</h3>
+             <h3 className="text-[11px] font-bold uppercase tracking-widest text-amber-500 mb-2">3. Mão de Obra e Custos Extras</h3>
              <div className="grid grid-cols-2 gap-4">
                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Tempo Gasto (Horas)</label>
-                  <input type="number" value={hours} onChange={e => setHours(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-2 text-sm focus:outline-none" placeholder="Ex: 2.5" />
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Tempo (Horas)</label>
+                  <Input type="number" value={hours} onChange={e => setHours(e.target.value)} className="font-mono tabular-nums" placeholder="Ex: 2.5" />
                </div>
                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5">Custo da Hora (R$)</label>
-                  <input type="number" value={laborCostPerHour} onChange={e => setLaborCostPerHour(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-2 text-sm focus:outline-none" placeholder="Ex: 25.00" />
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Custo da Hora (R$)</label>
+                  <Input type="number" value={laborCostPerHour} onChange={e => setLaborCostPerHour(e.target.value)} className="font-mono tabular-nums" placeholder="Ex: 25.00" />
                </div>
              </div>
 
              <div className="flex items-end gap-3 mt-4">
                <div className="flex-1 w-full">
-                 <input type="text" placeholder="Ex: Gás, Perfil de torra extra..." value={extraDesc} onChange={e => setExtraDesc(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 text-sm focus:outline-none" />
+                 <Input type="text" placeholder="Ex: Gás, Perfil de torra extra..." value={extraDesc} onChange={e => setExtraDesc(e.target.value)} />
                </div>
-               <div className="w-24">
-                 <input type="number" placeholder="R$" value={extraAmount} onChange={e => setExtraAmount(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 text-zinc-50 rounded-xl px-4 py-3 text-sm focus:outline-none" />
+               <div className="w-24 relative">
+                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">R$</span>
+                 <Input type="number" value={extraAmount} onChange={e => setExtraAmount(e.target.value)} className="font-mono tabular-nums pl-8" />
                </div>
                <Button variant="secondary" onClick={handleAddExtra} type="button" className="h-[46px]"><Plus size={16}/></Button>
              </div>
@@ -333,7 +338,12 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
 
           <section>
             <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Observações do Mestre Torrador</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} className="w-full bg-zinc-900/50 border border-zinc-800 text-zinc-50 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-amber-500 transition-colors" placeholder="Notas sensoriais, curva de torra, umidade, tempo extra de resfriamento..."></textarea>
+            <Textarea 
+              value={notes} 
+              onChange={e => setNotes(e.target.value)} 
+              rows={3} 
+              placeholder="Notas sensoriais, curva de torra, umidade, tempo extra de resfriamento..." 
+            />
           </section>
         </div>
       ) : (

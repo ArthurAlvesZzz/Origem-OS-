@@ -4,6 +4,8 @@ import { useRepositories } from '../repositories/RepositoryProvider';
 import { DigitalMenuCategory, DigitalMenuConfig, DigitalMenuOrderPayload } from '../domain/digitalMenu';
 import { Store, ShoppingBag, ArrowLeft, Clock, MapPin, Check, QrCode, Coffee, X } from 'lucide-react';
 import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
+import { Textarea } from '../components/ui/Textarea';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
 
@@ -428,21 +430,22 @@ export function PublicMenu({ slug }: { slug: string }) {
                   />
                   
                   {config.deliveryZonesJson && (
-                      <select 
-                        value={deliveryZone} 
-                        onChange={(e) => setDeliveryZone(e.target.value)}
-                        className="w-full bg-[#100C08] border border-zinc-800 rounded-lg px-4 py-3.5 text-zinc-100 focus:border-[#C59868] focus:ring-1 focus:ring-[#C59868] outline-none transition-all appearance-none text-sm"
-                      >
-                         <option value="" disabled>Selecione seu bairro ou área</option>
-                         {(()=>{
-                             try {
-                                 const zones = JSON.parse(config.deliveryZonesJson);
-                                 return zones.filter((z:any)=>z.active).map((z:any) => (
-                                     <option key={z.name} value={z.name}>{z.name} - {formatBRL(z.fee)}</option>
-                                 ));
-                             } catch(e) { return null; }
-                         })()}
-                      </select>
+                      <div className="relative">
+                          <Select 
+                            value={deliveryZone} 
+                            onChange={(e) => setDeliveryZone(e.target.value)}
+                          >
+                             <option value="" disabled>Selecione seu bairro ou área</option>
+                             {(()=>{
+                                 try {
+                                     const zones = JSON.parse(config.deliveryZonesJson);
+                                     return zones.filter((z:any)=>z.active).map((z:any) => (
+                                         <option key={z.name} value={z.name}>{z.name} - {formatBRL(z.fee)}</option>
+                                     ));
+                                 } catch(e) { return null; }
+                             })()}
+                          </Select>
+                      </div>
                   )}
                   
                   <p className="text-[10px] text-zinc-500 italic">Adicional de entrega será calculado na fatura.</p>
@@ -598,11 +601,11 @@ export function PublicMenu({ slug }: { slug: string }) {
 
                  <div className="space-y-3 pt-4 border-t border-zinc-800/80">
                      <h3 className="font-medium text-zinc-200 text-sm uppercase tracking-wider">Alguma observação?</h3>
-                     <textarea 
+                     <Textarea 
                          value={itemNotes}
                          onChange={e => setItemNotes(e.target.value)}
                          placeholder="Ex: Tirar cebola, ponto da carne..."
-                         className="w-full bg-[#100C08] border border-zinc-800 rounded-xl p-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#C59868] focus:ring-1 focus:ring-[#C59868] resize-none h-24 custom-scrollbar"
+                         className="h-24 resize-none"
                      />
                  </div>
              </div>

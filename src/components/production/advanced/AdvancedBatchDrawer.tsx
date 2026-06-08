@@ -5,6 +5,8 @@ import { Save, AlertTriangle, ArrowRight, CheckCircle2, Factory } from 'lucide-r
 import { Drawer } from '../../ui/Drawer';
 import { Button } from '../../ui/Button';
 import { useToast } from '../../../components/ui/Toast';
+import { Select } from '../../ui/Select';
+import { Input } from '../../ui/Input';
 
 interface AdvancedBatchDrawerProps {
   onClose: () => void;
@@ -163,34 +165,34 @@ export function AdvancedBatchDrawer({ onClose, onSuccess, initialProductId, init
            <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
              <div>
                <label className="block text-sm font-medium text-zinc-300 mb-1">Produto (SKU) *</label>
-               <input type="text" required value={productId} onChange={e => setProductId(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-amber-500" placeholder="Ex: SKU-CAFE-01"/>
+               <Input type="text" required value={productId} onChange={e => setProductId(e.target.value)} placeholder="Ex: SKU-CAFE-01"/>
              </div>
              
              <div>
                <label className="block text-sm font-medium text-zinc-300 mb-1">Quantidade Planejada (Kg) *</label>
-               <input type="number" min="0.1" step="0.1" required value={plannedQty} onChange={e => setPlannedQty(parseFloat(e.target.value) || 0)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-amber-500"/>
+               <Input type="number" min="0.1" step="0.1" required value={plannedQty} onChange={e => setPlannedQty(parseFloat(e.target.value) || 0)} className="tabular-nums" />
              </div>
 
              <div>
                <label className="block text-sm font-medium text-zinc-300 mb-1">Ficha Técnica / Receita *</label>
-               <select required value={recipeId} onChange={e => setRecipeId(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-amber-500">
-                  <option value="">Selecione a Receita</option>
+               <Select required value={recipeId} onChange={e => setRecipeId(e.target.value)}>
+                  <option value="" disabled>Selecione a Receita</option>
                   {recipes.map(r => <option key={r.id} value={r.id}>{r.name} (Rend. {(r.targetYield*100).toFixed(0)}%)</option>)}
-               </select>
+               </Select>
                {!recipeId && recipes.length > 0 && <p className="text-xs text-amber-500 mt-1 flex gap-1"><AlertTriangle size={14}/> Nenhuma receita selecionada.</p>}
              </div>
 
              <div>
                <label className="block text-sm font-medium text-zinc-300 mb-1">Perfil de Torra Prometido</label>
-               <select value={profileId} onChange={e => setProfileId(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-amber-500">
+               <Select value={profileId} onChange={e => setProfileId(e.target.value)}>
                   <option value="">(Opcional) Selecione Perfil</option>
                   {profiles.map(p => <option key={p.id} value={p.id}>{p.name} ({p.roastLevel})</option>)}
-               </select>
+               </Select>
              </div>
 
              <div>
                <label className="block text-sm font-medium text-zinc-300 mb-1">Mestre de Torra</label>
-               <input type="text" value={masterRoaster} onChange={e => setMasterRoaster(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-amber-500" placeholder="Nome do responsável"/>
+               <Input type="text" value={masterRoaster} onChange={e => setMasterRoaster(e.target.value)} placeholder="Nome do responsável"/>
              </div>
            </div>
         )}
@@ -198,26 +200,26 @@ export function AdvancedBatchDrawer({ onClose, onSuccess, initialProductId, init
         {step === 'reservation' && selectedRecipe && (
            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
               <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-sm">
-                 <div className="text-zinc-400 mb-2">Para produzir <strong className="text-white">{plannedQty}kg</strong> de {productId}, você precisará de:</div>
-                 <div className="font-medium text-amber-500">{((plannedQty) / (selectedRecipe.targetYield || 1)).toFixed(2)}kg de insumos verdes (Rend. {(selectedRecipe.targetYield*100).toFixed(0)}%)</div>
+                 <div className="text-zinc-400 mb-2">Para produzir <strong className="text-zinc-100">{plannedQty}kg</strong> de {productId}, você precisará de:</div>
+                 <div className="font-medium text-amber-500 tabular-nums">{((plannedQty) / (selectedRecipe.targetYield || 1)).toFixed(2)}kg de insumos verdes (Rend. {(selectedRecipe.targetYield*100).toFixed(0)}%)</div>
               </div>
 
               <div className="space-y-4">
-                 <h4 className="text-sm font-medium text-white">Alocação do Blend</h4>
+                 <h4 className="text-[11px] font-bold uppercase tracking-widest text-zinc-300">Alocação do Blend</h4>
                  {selectedRecipe.inputs?.map(input => {
                     const requiredKg = (plannedQty / (selectedRecipe.targetYield || 1)) * (input.percent || 0.0);
                     return (
-                       <div key={input.id} className="border border-zinc-800 p-3 rounded-lg bg-zinc-900/50">
-                          <div className="flex justify-between text-xs text-zinc-400 mb-2">
+                       <div key={input.id} className="border border-zinc-800 p-4 rounded-xl bg-zinc-900/50">
+                          <div className="flex justify-between text-xs text-zinc-400 mb-3 font-mono">
                              <span>Blend: {(input.percent * 100).toFixed(0)}%</span>
-                             <span>Necessário: <strong className="text-white">{requiredKg.toFixed(2)}kg</strong></span>
+                             <span>Necessário: <strong className="text-zinc-100">{requiredKg.toFixed(2)}kg</strong></span>
                           </div>
-                          <select value={selectedLots[input.id] || ''} onChange={e => setSelectedLots({...selectedLots, [input.id]: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-white text-sm">
-                             <option value="">Selecione o Lote Fonte...</option>
+                          <Select value={selectedLots[input.id] || ''} onChange={e => setSelectedLots({...selectedLots, [input.id]: e.target.value})}>
+                             <option value="" disabled>Selecione o Lote Fonte...</option>
                              {greenLots.map(l => (
                                 <option key={l.id} value={l.id} disabled={l.stockKg < requiredKg}>{l.name} - Est: {l.stockKg.toFixed(1)}kg</option>
                              ))}
-                          </select>
+                          </Select>
                        </div>
                     );
                  })}
@@ -239,12 +241,12 @@ export function AdvancedBatchDrawer({ onClose, onSuccess, initialProductId, init
            <div className="space-y-5 animate-in fade-in slide-in-from-right-4">
              <div>
                <label className="block text-sm font-medium text-zinc-300 mb-1">Peso Final Obtido (Kg) *</label>
-               <input type="number" min="0" step="0.01" required value={finalWeight || ''} onChange={e => setFinalWeight(parseFloat(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white text-xl font-bold focus:border-amber-500" placeholder="Ex: 8.5"/>
+               <Input type="number" min="0" step="0.01" required value={finalWeight || ''} onChange={e => setFinalWeight(parseFloat(e.target.value))} className="text-xl font-bold tabular-nums" placeholder="Ex: 8.5"/>
              </div>
 
              <div>
                <label className="block text-sm font-medium text-zinc-300 mb-1">Unidades Embaladas</label>
-               <input type="number" min="0" value={packagedQty || ''} onChange={e => setPackagedQty(parseInt(e.target.value))} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:border-amber-500" placeholder="Ex: 34 pacotes de 250g"/>
+               <Input type="number" min="0" value={packagedQty || ''} onChange={e => setPackagedQty(parseInt(e.target.value))} placeholder="Ex: 34 pacotes de 250g"/>
              </div>
 
              {finalWeight && selectedRecipe && (

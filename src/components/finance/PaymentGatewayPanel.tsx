@@ -3,6 +3,9 @@ import { useRepositories } from '../../repositories/RepositoryProvider';
 import { PaymentIntentRecord, PaymentProviderConfigRecord } from '../../repositories/interfaces/IPaymentRepository';
 import { CreditCard, CheckCircle2, XCircle, RotateCcw, MonitorPlay, AlertTriangle } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
+import { Select } from '../../components/ui/Select';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
 
 export function PaymentGatewayPanel() {
   const { success, error: toastError, info } = useToast();
@@ -54,23 +57,21 @@ export function PaymentGatewayPanel() {
        <div className="space-y-4 max-w-sm">
          <div>
            <label className="block text-xs font-medium text-zinc-500 mb-1">Provider</label>
-           <select 
-             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-zinc-300 pointer-events-none opacity-70"
+           <Select 
              value={config?.provider || 'mock'}
              disabled
            >
              <option value="mock">Simulado (Mock/Sandbox)</option>
              <option value="manual">Manual (Offline/Depósito)</option>
              <option value="stripe">Stripe</option>
-           </select>
+           </Select>
            <p className="text-[10px] text-zinc-500 mt-1">* A implementação de gateways de pagamento online reais requer configuração externa via variáveis de ambiente seguras.</p>
          </div>
          <div>
             <label className="block text-xs font-medium text-zinc-500 mb-1">Public Label</label>
-            <input 
+            <Input 
               readOnly
               value={config?.publicLabel || 'Pagamento Seguro'}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-zinc-300 pointer-events-none opacity-70" 
             />
          </div>
        </div>
@@ -108,8 +109,8 @@ export function PaymentGatewayPanel() {
                         <td className="p-4 text-right">
                            {i.status === 'pending' && (
                              <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => handleMarkPaid(i.id)} className="p-1 px-2 text-xs bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-emerald-950 rounded transition-colors font-medium">Baixar e Reconciliar</button>
-                                <button onClick={() => handleCancel(i.id)} className="p-1 px-2 text-xs bg-zinc-500/10 text-zinc-500 hover:bg-zinc-500 hover:text-zinc-50 font-medium rounded transition-colors">Cancelar</button>
+                                <Button variant="outline" size="sm" onClick={() => handleMarkPaid(i.id)} className="h-8 text-xs bg-emerald-500/10 text-emerald-500 border-transparent hover:bg-emerald-500 hover:text-emerald-950 px-3">Baixar</Button>
+                                <Button variant="outline" size="sm" onClick={() => handleCancel(i.id)} className="h-8 text-xs border-transparent shadow-none bg-zinc-800 text-zinc-400 hover:bg-zinc-700 px-3 hover:text-white">Cancelar</Button>
                              </div>
                            )}
                         </td>
