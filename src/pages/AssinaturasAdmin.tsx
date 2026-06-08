@@ -4,6 +4,8 @@ import { useRepositories } from '../repositories/RepositoryProvider';
 import { StorefrontPlan, SubscriptionRequestRecord, SubscriptionRecord } from '../repositories/interfaces/IStorefrontRepository';
 import { Coffee, Tag, Plus, CheckCircle2, XCircle, RotateCcw, Search, ExternalLink, Calendar, PauseCircle } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
+import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
 
 type Tab = 'overview' | 'plans' | 'requests' | 'active';
 
@@ -99,9 +101,9 @@ export function AssinaturasAdmin() {
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
       <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
         <h3 className="font-heading font-semibold text-zinc-50 flex items-center gap-2">Planos de Assinatura</h3>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-amber-950 font-medium text-sm rounded-lg transition-colors">
+        <Button variant="primary" className="flex items-center gap-2 h-auto py-1.5 px-3 text-sm">
           <Plus size={16} /> Novo Plano
-        </button>
+        </Button>
       </div>
       <table className="w-full text-left border-collapse">
         <thead>
@@ -115,7 +117,7 @@ export function AssinaturasAdmin() {
         <tbody className="divide-y divide-zinc-800/50">
           {plans.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-12">
+              <td colSpan={4} className="py-12">
                  <div className="flex flex-col items-center justify-center text-center">
                     <div className="w-12 h-12 rounded-full bg-zinc-950 flex items-center justify-center border border-zinc-800 mb-4">
                       <Tag className="text-zinc-500" size={20} />
@@ -191,8 +193,12 @@ export function AssinaturasAdmin() {
               <td className="p-4 text-right">
                 {r.status === 'pending' && (
                   <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => handleUpdateReqStatus(r.id, 'approved')} className="p-1 px-2 text-xs bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-emerald-950 rounded transition-colors font-medium">Aprovar Forma</button>
-                    <button onClick={() => handleUpdateReqStatus(r.id, 'rejected')} className="p-1 px-2 text-xs bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-red-950 rounded transition-colors font-medium">Recusar</button>
+                    <Button variant="outline" onClick={() => handleUpdateReqStatus(r.id, 'approved')} className="h-auto py-1 px-2 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 text-xs">
+                      Aprovar
+                    </Button>
+                    <Button variant="outline" onClick={() => handleUpdateReqStatus(r.id, 'rejected')} className="h-auto py-1 px-2 border-red-500/20 text-red-500 hover:bg-red-500/20 hover:text-red-400 text-xs">
+                      Recusar
+                    </Button>
                   </div>
                 )}
               </td>
@@ -244,11 +250,11 @@ export function AssinaturasAdmin() {
                  <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       {s.status === 'active' ? (
-                        <button onClick={() => handleUpdateSubStatus(s.id, 'paused')} className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-amber-500/10 rounded transition-colors" title="Pausar"><PauseCircle size={16}/></button>
+                        <Button variant="secondary" onClick={() => handleUpdateSubStatus(s.id, 'paused')} className="p-2 h-auto text-amber-500" title="Pausar"><PauseCircle size={16}/></Button>
                       ) : s.status === 'paused' ? (
-                        <button onClick={() => handleUpdateSubStatus(s.id, 'active')} className="p-1.5 text-zinc-400 hover:text-emerald-500 hover:bg-emerald-500/10 rounded transition-colors" title="Reativar"><CheckCircle2 size={16}/></button>
+                        <Button variant="secondary" onClick={() => handleUpdateSubStatus(s.id, 'active')} className="p-2 h-auto text-emerald-500" title="Reativar"><CheckCircle2 size={16}/></Button>
                       ) : null}
-                      <button onClick={() => handleUpdateSubStatus(s.id, 'cancelled')} className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Cancelar"><XCircle size={16}/></button>
+                      <Button variant="secondary" onClick={() => handleUpdateSubStatus(s.id, 'cancelled')} className="p-2 h-auto text-red-500" title="Cancelar"><XCircle size={16}/></Button>
                     </div>
                  </td>
               </tr>
@@ -285,10 +291,19 @@ export function AssinaturasAdmin() {
       </div>
 
       <div className="min-h-[400px]">
-        {activeTab === 'overview' && renderOverview()}
-        {activeTab === 'plans' && renderPlans()}
-        {activeTab === 'requests' && renderRequests()}
-        {activeTab === 'active' && renderSubscriptions()}
+        {isLoading ? (
+           <div className="space-y-4">
+              <Skeleton className="h-[200px] w-full" />
+              <Skeleton className="h-[400px] w-full" />
+           </div>
+        ) : (
+           <>
+             {activeTab === 'overview' && renderOverview()}
+             {activeTab === 'plans' && renderPlans()}
+             {activeTab === 'requests' && renderRequests()}
+             {activeTab === 'active' && renderSubscriptions()}
+           </>
+        )}
       </div>
 
     </div>

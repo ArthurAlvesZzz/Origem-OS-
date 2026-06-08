@@ -17,6 +17,7 @@ import { LoyaltyTab } from '../components/crm/LoyaltyTab';
 import { ReputationTab } from '../components/crm/ReputationTab';
 import { InsightsTab } from '../components/crm/InsightsTab';
 import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
 
 export function Crm() {
     const { crmRepo } = useRepositories();
@@ -65,8 +66,18 @@ export function Crm() {
         openDealsCount: deals.filter(d => d.status === 'open').length,
         pipelineValue: deals.filter(d => d.status === 'open').reduce((sum, d) => sum + d.value, 0),
         unreadInbox: conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0),
-        lateFollowUps: Math.floor(Math.random() * 3) // mock for visual
+        lateFollowUps: deals.filter(d => d.status === 'open' && new Date(d.createdAt).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000).length
     };
+
+    if (isLoading && deals.length === 0 && pipelines.length === 0) {
+        return (
+            <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-[500px] w-full" />
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">

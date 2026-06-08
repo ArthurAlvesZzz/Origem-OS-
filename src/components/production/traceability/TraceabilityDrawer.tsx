@@ -11,6 +11,7 @@ import { Button } from '../../ui/Button';
 import { Select } from '../../ui/Select';
 import { Input } from '../../ui/Input';
 import { Textarea } from '../../ui/Textarea';
+import { useConfirm } from '../../ui/ConfirmDialog';
 
 interface TraceabilityDrawerProps {
   traceId?: string;
@@ -20,6 +21,7 @@ interface TraceabilityDrawerProps {
 
 export function TraceabilityDrawer({ traceId, onClose, onSuccess }: TraceabilityDrawerProps) {
   const { success, error: toastError, info } = useToast();
+  const { confirm } = useConfirm();
   const { traceabilityRepo, qualityRepo } = useRepositories();
   const [loading, setLoading] = useState(false);
   const [trace, setTrace] = useState<PublicLotTrace | null>(null);
@@ -106,6 +108,15 @@ export function TraceabilityDrawer({ traceId, onClose, onSuccess }: Traceability
 
   const handleUnpublish = async () => {
     if (!trace) return;
+    
+    const proceed = await confirm({
+      title: 'Despublicar Lote',
+      description: 'O QR Code e o link deixarão de funcionar para os clientes finais. Proceder?',
+      confirmText: 'Sim, Despublicar',
+      isDestructive: true
+    });
+    if (!proceed) return;
+
     setLoading(true);
     try {
       await traceabilityRepo.unpublish(trace.id);

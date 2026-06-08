@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import { Phone, Calendar, CheckCircle2, XCircle, Clock, Link as LinkIcon, Edit2, History, Briefcase } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Drawer } from '../ui/Drawer';
+import { useToast } from '../ui/Toast';
+import { useConfirm } from '../ui/ConfirmDialog';
 
 interface CrmDealDrawerProps {
     deal: any; // We can type it properly, but CrmDealRecord can come from ICrmRepository
     onClose: () => void;
-    onStatusChange: (dealId: string, newStatus: string) => void;
+    onStatusChange: (dealId: string, newStatus: string) => Promise<void>;
 }
 
 export function CrmDealDrawer({ deal, onClose, onStatusChange }: CrmDealDrawerProps) {
     const [actionLoading, setActionLoading] = useState(false);
+    const { success, error } = useToast();
+    const { confirm } = useConfirm();
 
     // Render early return correctly keeping Hooks above
     if (!deal) return null;
@@ -18,13 +22,27 @@ export function CrmDealDrawer({ deal, onClose, onStatusChange }: CrmDealDrawerPr
     let customData: any = {};
     try { if (deal.customDataJson) customData = JSON.parse(deal.customDataJson); } catch (e) {}
 
-    const handleAction = (status: string) => {
+    const handleAction = async (status: string) => {
+        if (status === 'lost') {
+            const proceed = await confirm({
+                title: 'Marcar como Perdido',
+                description: 'Tem certeza que deseja marcar este negócio como perdido? Essa ação encerrará o ciclo.',
+                confirmText: 'Sim, Marcar como Perdido',
+                isDestructive: true
+            });
+            if (!proceed) return;
+        }
+
         setActionLoading(true);
-        setTimeout(() => {
-            onStatusChange(deal.id, status);
-            setActionLoading(false);
+        try {
+            await onStatusChange(deal.id, status);
+            success('Status do negócio atualizado com sucesso.');
             onClose();
-        }, 500);
+        } catch (err: any) {
+            error(err.message || 'Falha ao atualizar status do negócio.');
+        } finally {
+            setActionLoading(false);
+        }
     };
 
     const handleWhatsApp = () => {
@@ -54,7 +72,7 @@ export function CrmDealDrawer({ deal, onClose, onStatusChange }: CrmDealDrawerPr
                     )}
                     {deal.status !== 'lost' && (
                         <Button 
-                            variant="destructive"
+                            variant="danger"
                             className="flex-1 text-[13px]"
                             disabled={actionLoading}
                             isLoading={actionLoading && deal.status === 'lost'}
@@ -86,7 +104,7 @@ export function CrmDealDrawer({ deal, onClose, onStatusChange }: CrmDealDrawerPr
                     <Button variant="explore" className="w-full text-xs" onClick={handleWhatsApp}>
                         <Phone size={14} /> WhatsApp
                     </Button>
-                    <Button variant="secondary" className="w-full text-xs" title="Disponível com integração API" disabled>
+                    <Button variant="outline" className="w-full text-xs" title="Disponível com integração API" disabled>
                         <Calendar size={14} /> Agendar
                     </Button>
                 </div>

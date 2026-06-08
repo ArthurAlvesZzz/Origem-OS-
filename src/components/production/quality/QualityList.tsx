@@ -9,6 +9,7 @@ export function QualityList() {
   const [reviews, setReviews] = useState<QualityReviewRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReviewId, setSelectedReviewId] = useState<string>();
+  const [searchTerm, setSearchTerm] = useState('');
 
   const loadData = () => {
     setLoading(true);
@@ -18,6 +19,11 @@ export function QualityList() {
   useEffect(() => {
     loadData();
   }, [qualityRepo]);
+
+  const filteredReviews = reviews.filter(r => 
+    (r.batch?.code || r.productionBatchId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (r.product?.name || r.productId || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
      return <div className="p-8 text-center text-zinc-500">Carregando fila de qualidade...</div>;
@@ -39,7 +45,7 @@ export function QualityList() {
          <div className="flex gap-2 w-full sm:w-auto">
            <div className="relative flex-1 sm:w-64">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-             <input type="text" placeholder="Buscar lote..." className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-white focus:border-amber-500" />
+             <input type="text" placeholder="Buscar lote..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-white focus:border-amber-500" />
            </div>
            <button className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors">
              <Filter size={18} />
@@ -60,7 +66,7 @@ export function QualityList() {
                </tr>
              </thead>
              <tbody className="divide-y divide-zinc-800">
-               {reviews.map(r => (
+               {filteredReviews.map(r => (
                  <tr key={r.id} className="hover:bg-zinc-800/50 transition-colors">
                     <td className="px-6 py-4">
                        <span className="text-white font-mono">{r.batch?.code || r.productionBatchId || 'Lote Avulso'}</span>
@@ -81,7 +87,7 @@ export function QualityList() {
                     </td>
                  </tr>
                ))}
-               {reviews.length === 0 && (
+               {filteredReviews.length === 0 && (
                   <tr>
                      <td colSpan={5} className="px-6 py-8 text-center text-zinc-500">
                         Nenhuma avaliação de qualidade pendente ou registrada.

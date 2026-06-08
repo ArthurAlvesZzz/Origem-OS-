@@ -12,20 +12,29 @@ import { useRepositories } from '../repositories/RepositoryProvider';
 import { FinancialTransaction } from '../domain/types';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
+import { Skeleton } from '../components/ui/Skeleton';
 
 export function Financeiro() {
   const { success, error: toastError, info } = useToast();
   const [activeTab, setActiveTab] = useState<'Visão Geral' | 'Receber' | 'Pagar' | 'Fluxo de Caixa' | 'DRE' | 'Pagamentos Online'>('Visão Geral');
   const [isExpenseDrawerOpen, setIsExpenseDrawerOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const { financialRepo } = useRepositories();
   const [receivables, setReceivables] = useState<FinancialTransaction[]>([]);
   const [payables, setPayables] = useState<FinancialTransaction[]>([]);
 
   useEffect(() => {
-    financialRepo.getAccountsReceivable().then(setReceivables);
-    financialRepo.getAccountsPayable().then(setPayables);
+    setLoading(true);
+    const fetchData = async () => {
+       const rec = await financialRepo.getAccountsReceivable();
+       const pay = await financialRepo.getAccountsPayable();
+       setReceivables(rec);
+       setPayables(pay);
+       setLoading(false);
+    };
+    fetchData();
   }, [financialRepo, refreshKey]);
 
   useEffect(() => {
@@ -53,6 +62,15 @@ export function Financeiro() {
     setIsExpenseDrawerOpen(false);
     setRefreshKey(prev => prev + 1);
   };
+
+  if (loading && receivables.length === 0 && payables.length === 0) {
+      return (
+         <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-[500px] w-full" />
+         </div>
+      );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500" key={refreshKey}>

@@ -3,6 +3,7 @@ import { useRepositories } from '../../../repositories/RepositoryProvider';
 import { QualityReviewRecord } from '../../../repositories/interfaces/IQualityRepository';
 import { X, Save, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '../../../components/ui/Toast';
+import { useConfirm } from '../../../components/ui/ConfirmDialog';
 import { Drawer } from '../../../components/ui/Drawer';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
@@ -16,6 +17,7 @@ interface QualityReviewDrawerProps {
 
 export function QualityReviewDrawer({ reviewId, onClose, onSuccess }: QualityReviewDrawerProps) {
   const { success, error: toastError, info } = useToast();
+  const { confirm } = useConfirm();
   const { qualityRepo } = useRepositories();
   const [loading, setLoading] = useState(false);
   const [review, setReview] = useState<QualityReviewRecord | null>(null);
@@ -71,6 +73,14 @@ export function QualityReviewDrawer({ reviewId, onClose, onSuccess }: QualityRev
   };
 
   const handleReject = async () => {
+    const proceed = await confirm({
+      title: 'Reprovar Lote',
+      description: 'Tem certeza que deseja reprovar este lote CQ? Esta ação não pode ser desfeita.',
+      confirmText: 'Sim, Reprovar',
+      isDestructive: true
+    });
+    if (!proceed) return;
+
     setLoading(true);
     try {
       await qualityRepo.updateReview(reviewId, {

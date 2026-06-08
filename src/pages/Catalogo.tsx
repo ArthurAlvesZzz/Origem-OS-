@@ -5,6 +5,7 @@ import { Input } from '../components/ui/Input';
 import { Plus, Search, Edit2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Pagination } from '../components/ui/Pagination';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useState, useEffect } from 'react';
 import { ProductFormDrawer } from '../components/catalog/ProductFormDrawer';
 import { Product } from '../domain/types';
@@ -19,12 +20,17 @@ export function Catalogo() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const [loading, setLoading] = useState(true);
 
   const { productRepo } = useRepositories();
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    productRepo.getProducts().then(setProducts);
+    setLoading(true);
+    productRepo.getProducts().then(prods => {
+      setProducts(prods);
+      setLoading(false);
+    });
   }, [productRepo, refreshKey]);
 
   const handleOpenNew = () => {
@@ -58,6 +64,15 @@ export function Catalogo() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  if (loading) {
+     return (
+       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-96 w-full" />
+       </div>
+     );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto" key={refreshKey}>
@@ -129,12 +144,14 @@ export function Catalogo() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button 
+                      <Button
+                        variant="secondary"
                         onClick={() => handleOpenEdit(p)}
-                        className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-colors inline-block"
+                        className="p-2 h-auto"
+                        title="Editar Produto"
                       >
                         <Edit2 size={16} />
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -145,7 +162,7 @@ export function Catalogo() {
                     <EmptyState
                       icon={<Search size={24} />}
                       title="Nenhum produto encontrado"
-                      description="Seu catálogo está vazio. Clique em Novo Produto para adicionar."
+                      description="Seu catálogo está vazio ou a busca não encontrou resultados."
                     />
                   </td>
                 </tr>

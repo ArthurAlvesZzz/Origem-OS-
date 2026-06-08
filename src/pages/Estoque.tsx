@@ -12,12 +12,14 @@ import { StockMovementsTable } from '../components/inventory/StockMovementsTable
 import { MovementType, Product } from '../domain/types';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { exportToCSV } from '../lib/export';
+import { Skeleton } from '../components/ui/Skeleton';
 
 export function Estoque() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [initialType, setInitialType] = useState<MovementType>('Entrada');
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,6 +31,7 @@ export function Estoque() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       const prods = await productRepo.getProducts();
       const withStock = await Promise.all(
         prods.map(async p => ({
@@ -37,6 +40,7 @@ export function Estoque() {
         }))
       );
       setProductsData(withStock);
+      setLoading(false);
     };
     fetchData();
   }, [productRepo, inventoryRepo, refreshKey]);
@@ -62,6 +66,15 @@ export function Estoque() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  if (loading) {
+     return (
+       <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-6">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-96 w-full" />
+       </div>
+     );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500" key={refreshKey}>

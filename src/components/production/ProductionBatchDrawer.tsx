@@ -151,10 +151,6 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
       });
       
       setIsSuccess(true);
-      setTimeout(() => {
-        onComplete();
-      }, 1500);
-
     } catch (err: any) {
       console.error(err);
       error(err.message);
@@ -202,7 +198,11 @@ export function ProductionBatchDrawer({ onClose, onComplete }: ProductionBatchDr
               Salvar Lote
             </Button>
           </div>
-        ) : undefined
+        ) : (
+          <Button variant="primary" size="lg" onClick={onComplete} className="w-full">
+            Fechar
+          </Button>
+        )
       }
     >
       {!isSuccess ? (

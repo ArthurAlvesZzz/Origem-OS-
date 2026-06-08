@@ -13,7 +13,7 @@ export function InsightsTab() {
     setLoading(true);
     await crmRepo.recalculateCustomerScores();
     setLoading(false);
-    toastError('Reprocessamento em lote concluído.');
+    success('Reprocessamento em lote concluído.');
   }
 
   async function loadInsight() {

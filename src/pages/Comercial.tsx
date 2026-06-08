@@ -12,11 +12,13 @@ import { useRepositories } from '../repositories/RepositoryProvider';
 import { Order } from '../domain/types';
 import { Pagination } from '../components/ui/Pagination';
 import { exportToCSV } from '../lib/export';
+import { Skeleton } from '../components/ui/Skeleton';
 
 export function Comercial() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,7 +27,11 @@ export function Comercial() {
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    orderRepo.getOrders().then(setOrders);
+    setLoading(true);
+    orderRepo.getOrders().then(res => {
+        setOrders(res);
+        setLoading(false);
+    });
   }, [orderRepo, refreshKey]);
 
   useEffect(() => {
@@ -56,6 +62,15 @@ export function Comercial() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  if (loading) {
+     return (
+       <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-8">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-[500px] w-full" />
+       </div>
+     );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto animate-in fade-in duration-500" key={refreshKey}>

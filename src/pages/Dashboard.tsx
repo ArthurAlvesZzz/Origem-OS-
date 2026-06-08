@@ -145,7 +145,7 @@ export function Dashboard() {
             <p className="text-zinc-400 text-sm max-w-md mx-auto mb-8 relative z-10">O seu Command Center está quase pronto. Finalize as configurações básicas para decolar.</p>
 
             <div className="flex flex-col gap-3 text-left relative z-10">
-               <button onClick={() => completeStep('config')} className="bg-zinc-950/80 backdrop-blur border border-zinc-800 p-4 rounded-xl hover:border-amber-500/50 hover:bg-zinc-900 transition-all flex items-center gap-4 group">
+               <div role="button" tabIndex={0} onClick={() => completeStep('config')} onKeyDown={(e) => e.key === 'Enter' && completeStep('config')} className="bg-zinc-950/80 backdrop-blur border border-zinc-800 p-4 rounded-xl hover:border-amber-500/50 hover:bg-zinc-900 transition-all flex items-center gap-4 group cursor-pointer">
                   <div className="bg-zinc-900 border border-zinc-800 p-3 rounded-lg text-zinc-400 group-hover:text-amber-500 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 transition-colors">
                      <Settings size={20} />
                   </div>
@@ -154,9 +154,9 @@ export function Dashboard() {
                     <p className="text-xs text-zinc-400">Nome, CNPJ e logo oficial.</p>
                   </div>
                   <ChevronRight size={18} className="text-zinc-600 group-hover:translate-x-1 group-hover:text-amber-500 transition-all" />
-               </button>
+               </div>
                
-               <button onClick={() => completeStep('catalogo')} className="bg-zinc-950/80 backdrop-blur border border-zinc-800 p-4 rounded-xl hover:border-amber-500/50 hover:bg-zinc-900 transition-all flex items-center gap-4 group">
+               <div role="button" tabIndex={0} onClick={() => completeStep('catalogo')} onKeyDown={(e) => e.key === 'Enter' && completeStep('catalogo')} className="bg-zinc-950/80 backdrop-blur border border-zinc-800 p-4 rounded-xl hover:border-amber-500/50 hover:bg-zinc-900 transition-all flex items-center gap-4 group cursor-pointer">
                   <div className="bg-zinc-900 border border-zinc-800 p-3 rounded-lg text-zinc-400 group-hover:text-amber-500 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 transition-colors">
                      <PackageX size={20} />
                   </div>
@@ -165,9 +165,9 @@ export function Dashboard() {
                     <p className="text-xs text-zinc-400">Cadastre o seu carro-chefe.</p>
                   </div>
                   <ChevronRight size={18} className="text-zinc-600 group-hover:translate-x-1 group-hover:text-amber-500 transition-all" />
-               </button>
-
-               <button onClick={() => completeStep('digital_menu')} className="bg-zinc-950/80 backdrop-blur border border-zinc-800 p-4 rounded-xl hover:border-amber-500/50 hover:bg-zinc-900 transition-all flex items-center gap-4 group">
+               </div>
+               
+               <div role="button" tabIndex={0} onClick={() => completeStep('digital_menu')} onKeyDown={(e) => e.key === 'Enter' && completeStep('digital_menu')} className="bg-zinc-950/80 backdrop-blur border border-zinc-800 p-4 rounded-xl hover:border-amber-500/50 hover:bg-zinc-900 transition-all flex items-center gap-4 group cursor-pointer">
                   <div className="bg-zinc-900 border border-zinc-800 p-3 rounded-lg text-zinc-400 group-hover:text-amber-500 group-hover:bg-amber-500/10 group-hover:border-amber-500/20 transition-colors">
                      <Store size={20} />
                   </div>
@@ -176,11 +176,11 @@ export function Dashboard() {
                     <p className="text-xs text-zinc-400">Prepare sua vitrine para clientes.</p>
                   </div>
                   <ChevronRight size={18} className="text-zinc-600 group-hover:translate-x-1 group-hover:text-amber-500 transition-all" />
-               </button>
+               </div>
             </div>
             
             <div className="mt-8 relative z-10">
-               <button onClick={() => setIsOnboarding(false)} className="text-xs text-zinc-500 hover:text-zinc-300 font-medium transition-colors">Pular onboarding e ir para o Dashboard</button>
+               <Button variant="ghost" onClick={() => setIsOnboarding(false)} className="text-xs text-zinc-500 hover:text-zinc-300 font-medium transition-colors p-2 h-auto">Pular onboarding e ir para o Dashboard</Button>
             </div>
          </Card>
        </div>

@@ -8,7 +8,7 @@ interface CrmPipelineTabProps {
     activePipelineId: string | null;
     setActivePipelineId: (id: string) => void;
     deals: CrmDealRecord[];
-    onStatusChange: (dealId: string, status: string) => void;
+    onStatusChange: (dealId: string, status: string) => Promise<void>;
 }
 
 export function CrmPipelineTab({ pipelines, activePipelineId, setActivePipelineId, deals, onStatusChange }: CrmPipelineTabProps) {

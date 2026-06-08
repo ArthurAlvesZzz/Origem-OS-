@@ -7,6 +7,7 @@ import { ProductionBatchDrawer } from '../components/production/ProductionBatchD
 import { ProductionDetailDrawer } from '../components/production/ProductionDetailDrawer';
 import { ProductionBatch } from '../domain/types';
 import { useRepositories } from '../repositories/RepositoryProvider';
+import { Skeleton } from '../components/ui/Skeleton';
 
 import { GreenLotsList } from '../components/production/advanced/GreenLotsList';
 import { RecipeList } from '../components/production/advanced/RecipeList';
@@ -30,12 +31,17 @@ export function Producao() {
   const [demandInitialQty, setDemandInitialQty] = useState<number>();
   const [detailBatch, setDetailBatch] = useState<ProductionBatch | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const { productionRepo, advancedProductionRepo } = useRepositories();
   const [batches, setBatches] = useState<ProductionBatch[]>([]);
 
   useEffect(() => {
-    productionRepo.getBatches().then(setBatches);
+    setLoading(true);
+    productionRepo.getBatches().then(res => {
+        setBatches(res);
+        setLoading(false);
+    });
   }, [productionRepo, refreshKey]);
 
   const handleComplete = () => {
@@ -46,6 +52,15 @@ export function Producao() {
   // Calculate metrics
   const totalProducedStr = batches.filter(b => b.status === 'Concluído').reduce((acc, b) => acc + b.finalWeight, 0).toFixed(1);
   const avgYieldStr = (batches.filter(b => b.status === 'Concluído' && b.yieldPercent > 0).reduce((acc, b) => acc + b.yieldPercent, 0) / Math.max(1, batches.filter(b => b.status === 'Concluído' && b.yieldPercent > 0).length)).toFixed(1);
+
+  if (loading && activeTab === 'orders') {
+     return (
+       <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-96 w-full" />
+       </div>
+     );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto" key={refreshKey}>

@@ -3,6 +3,7 @@ import { Server, Activity, Shield, Trash2, Database, Wifi, Loader2, Globe, Cpu, 
 import { getApiBaseUrl, setApiBaseUrl, clearApiBaseUrl, safeFetch } from '../repositories/api/apiClient';
 import { useRepositories } from '../repositories/RepositoryProvider';
 import { useConfirm } from '../components/ui/ConfirmDialog';
+import { Button } from '../components/ui/Button';
 
 export function ConexaoServidor() {
   const { actualType } = useRepositories();
@@ -181,23 +182,25 @@ export function ConexaoServidor() {
                  <div className="pt-4 border-t border-zinc-800/50 flex items-center justify-between">
                     <div>
                         {dataMode === 'api' && (
-                            <button
+                            <Button
+                                variant="secondary"
                                 onClick={testConnection}
                                 disabled={isTesting}
-                                className="text-sm font-medium text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                                className="px-4 py-2"
                             >
                                 {isTesting ? <Loader2 size={16} className="animate-spin" /> : <Activity size={16} />}
                                 Testar Servidor
-                            </button>
+                            </Button>
                         )}
                     </div>
                     
-                    <button
+                    <Button
+                        variant="primary"
                         onClick={handleSave}
-                        className="text-sm font-semibold text-zinc-950 bg-amber-500 hover:bg-amber-400 px-6 py-2.5 rounded-lg transition-colors shadow-lg hover:shadow-amber-500/20"
+                        className="px-6 py-2.5 shadow-lg shadow-amber-500/10"
                     >
                         Salvar e Reiniciar
-                    </button>
+                    </Button>
                  </div>
               </div>
            </div>

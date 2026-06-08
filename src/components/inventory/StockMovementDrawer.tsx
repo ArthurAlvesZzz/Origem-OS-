@@ -5,6 +5,7 @@ import { useRepositories } from '../../repositories/RepositoryProvider';
 import { Drawer } from '../ui/Drawer';
 import { Button } from '../ui/Button';
 import { useToast } from '../../components/ui/Toast';
+import { useConfirm } from '../ui/ConfirmDialog';
 import { Select } from '../ui/Select';
 import { Input } from '../ui/Input';
 import { Textarea } from '../ui/Textarea';
@@ -42,6 +43,8 @@ export function StockMovementDrawer({ onClose, onComplete, initialType = 'Entrad
     fetchData();
   }, [productRepo, inventoryRepo]);
 
+  const { confirm } = useConfirm();
+
   const selectedProduct = productsData.find(p => p.id === productId);
 
   const handleSubmit = async (e: any) => {
@@ -58,6 +61,26 @@ export function StockMovementDrawer({ onClose, onComplete, initialType = 'Entrad
         return;
       }
       
+      if (type === 'Perda') {
+         const proceed = await confirm({
+             title: 'Registrar Perda',
+             description: `Confirma a perda de ${q} ${selectedProduct.unit} de ${selectedProduct.name}? O estoque será reduzido.`,
+             confirmText: 'Registrar Perda',
+             isDestructive: true
+         });
+         if (!proceed) return;
+      }
+
+      if (type === 'Ajuste') {
+         const diff = q - selectedProduct.currentStock;
+         const proceed = await confirm({
+             title: 'Ajuste de Estoque',
+             description: `Isso fará um ajuste de ${diff} ${selectedProduct.unit}. Confirma?`,
+             confirmText: 'Confirmar Ajuste'
+         });
+         if (!proceed) return;
+      }
+
       setIsSaving(true);
 
       if (type === 'Entrada') {
@@ -73,9 +96,6 @@ export function StockMovementDrawer({ onClose, onComplete, initialType = 'Entrad
       }
 
       setIsSuccess(true);
-      setTimeout(() => {
-        onComplete();
-      }, 1500);
     } catch (err: any) {
       console.error(err);
       toastError(err.message);
@@ -103,7 +123,11 @@ export function StockMovementDrawer({ onClose, onComplete, initialType = 'Entrad
             {!isSaving && <Check size={20} />}
             Confirmar Movimentação
           </Button>
-        ) : undefined
+        ) : (
+          <Button variant="primary" size="lg" onClick={onComplete} className="w-full">
+            Fechar
+          </Button>
+        )
       }
     >
       {!isSuccess ? (

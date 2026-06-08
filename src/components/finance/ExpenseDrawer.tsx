@@ -52,9 +52,6 @@ export function ExpenseDrawer({ onClose, onComplete }: ExpenseDrawerProps) {
       });
 
       setIsSuccess(true);
-      setTimeout(() => {
-        onComplete();
-      }, 1500);
     } catch (e: any) {
       console.error(e);
       toastError('Erro ao salvar despesa');
@@ -83,7 +80,11 @@ export function ExpenseDrawer({ onClose, onComplete }: ExpenseDrawerProps) {
             {!isFinalizing && <Check size={20} />}
             Confirmar Despesa
           </Button>
-        ) : undefined
+        ) : (
+          <Button variant="primary" size="lg" onClick={onComplete} className="w-full">
+            Fechar
+          </Button>
+        )
       }
     >
       {!isSuccess ? (

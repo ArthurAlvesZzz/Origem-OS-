@@ -6,6 +6,7 @@ import { useRepositories } from '../../repositories/RepositoryProvider';
 import { Drawer } from '../ui/Drawer';
 import { Button } from '../ui/Button';
 import { useToast } from '../../components/ui/Toast';
+import { useConfirm } from '../ui/ConfirmDialog';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 
@@ -18,6 +19,7 @@ interface ProductFormDrawerProps {
 export function ProductFormDrawer({ onClose, onComplete, product }: ProductFormDrawerProps) {
   const { success, error: toastError, info } = useToast();
   const { productRepo } = useRepositories();
+  const { confirm } = useConfirm();
   const [formData, setFormData] = useState({
     name: product?.name || '',
     category: product?.category || 'Café Torrado',
@@ -45,6 +47,16 @@ export function ProductFormDrawer({ onClose, onComplete, product }: ProductFormD
       if (priceNum <= 0) {
         toastError('O preço de venda deve ser maior que zero.');
         return;
+      }
+
+      if (product && product.active && !formData.active) {
+          const proceed = await confirm({
+              title: 'Inativar Produto',
+              description: 'Tem certeza que deseja inativar este produto? Ele não aparecerá mais para vendas e movimentos de estoque.',
+              confirmText: 'Sim, Inativar',
+              isDestructive: true
+          });
+          if (!proceed) return;
       }
       
       setIsSaving(true);
